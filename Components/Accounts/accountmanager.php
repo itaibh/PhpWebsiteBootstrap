@@ -10,7 +10,7 @@
 
         private function init()
         {
-            $this->db->GetDb()->
+            $this->db->executeNonQuery(self::GetCreateUsersTableSQL());
         }
 
         private static function GetCreateUsersTableSQL()

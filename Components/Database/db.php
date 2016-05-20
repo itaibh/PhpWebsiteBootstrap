@@ -51,6 +51,12 @@ class DB {
 		echo "<p>done creating db. time to fill with tables.</p>";
 		return true;
 	}
+
+    public function executeNonQuery($sql, $parameters)
+    {
+        $stmt = $this->dbh->prepare($sql);
+        $stmt->execute($parameters);
+    }
 }
 
 ?>
