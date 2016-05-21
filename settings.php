@@ -1,3 +1,3 @@
 <?php
-    define('website_title',"PHP Website Bootstrap");
+    define('website_title', 'PHP Website Bootstrap Demo');
 ?>
