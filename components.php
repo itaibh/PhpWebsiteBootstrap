@@ -8,11 +8,10 @@ function InitWebsite(){
     try
     {
         DB::GetInstance()->ConnectToDatabase();
-        return true;
     }
     catch(Exception $e)
     {
-        return false;
+        InstallWebsite();
     }
 }
 
