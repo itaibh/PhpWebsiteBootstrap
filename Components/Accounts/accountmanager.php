@@ -65,8 +65,8 @@ class AccountManager {
 	{
 		$db_prefix = DB::GetInstance()->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_roles` (
-                `user_id` INT NOT NULL AUTO_INCREMENT ,
-                `role_id` INT NOT NULL AUTO_INCREMENT ,
+                `user_id` INT NOT NULL,
+                `role_id` INT NOT NULL,
         		PRIMARY KEY (`role_id`, `user_id`)
         		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1";
 
@@ -77,7 +77,7 @@ class AccountManager {
 	{
 		$db_prefix = DB::GetInstance()->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_tokens` (
-                `user_id` INT NOT NULL AUTO_INCREMENT ,
+                `user_id` INT NOT NULL,
                 `token` VARCHAR(100) NOT NULL,
                 `purpose` VARCHAR(100) NOT NULL,
                 `creation_date` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
