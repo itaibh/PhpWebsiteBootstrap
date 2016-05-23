@@ -22,14 +22,14 @@ class DB {
         $this->prefix = $this->settings['db_prefix'];
     }
 
-    private static $instance;
-    public static function GetInstance()
+    public static function Instance()
     {
-        if (null === static::$instance) {
-            static::$instance = new static();
+        static $instance = null;
+        if ($instance === null)
+        {
+            $instance = new static();
         }
-
-        return static::$instance;
+        return $instance;
     }
 
     public function CreateDatabase(){

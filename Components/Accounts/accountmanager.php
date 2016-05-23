@@ -9,19 +9,19 @@ class AccountManager {
         $this->init();
     }
 
-    private static $instance;
-    public static function GetInstance()
+    public static function Instance()
     {
-        if (null === static::$instance) {
-            static::$instance = new static();
+        static $instance = null;
+        if ($instance === null)
+        {
+            $instance = new static();
         }
-
-        return static::$instance;
+        return $instance;
     }
 
     private function init()
     {
-        $db = DB::GetInstance();
+        $db = DB::Instance();
         $db->ExecuteNonQuery(self::GetCreateUsersTableSQL());
         $db->ExecuteNonQuery(self::GetCreateRolesTableSQL());
         $db->ExecuteNonQuery(self::GetCreateUserRolesTableSQL());
@@ -30,7 +30,7 @@ class AccountManager {
 
     private static function GetCreateUsersTableSQL()
 	{
-		$db_prefix = DB::GetInstance()->prefix;
+		$db_prefix = DB::Instance()->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}users` (
                 `user_id` INT NOT NULL AUTO_INCREMENT,
         		`username` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
@@ -50,7 +50,7 @@ class AccountManager {
 
     private static function GetCreateRolesTableSQL()
 	{
-		$db_prefix = DB::GetInstance()->prefix;
+		$db_prefix = DB::Instance()->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}roles` (
                 `role_id` INT NOT NULL AUTO_INCREMENT ,
         		`role_name` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
@@ -63,7 +63,7 @@ class AccountManager {
 
     private static function GetCreateUserRolesTableSQL()
 	{
-		$db_prefix = DB::GetInstance()->prefix;
+		$db_prefix = DB::Instance()->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_roles` (
                 `user_id` INT NOT NULL,
                 `role_id` INT NOT NULL,
@@ -75,7 +75,7 @@ class AccountManager {
 
     private static function GetCreateUserTokensTableSQL()
 	{
-		$db_prefix = DB::GetInstance()->prefix;
+		$db_prefix = DB::Instance()->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_tokens` (
                 `user_id` INT NOT NULL,
                 `token` VARCHAR(100) NOT NULL,
@@ -91,7 +91,7 @@ class AccountManager {
     {
         $this->validateAccountUniqueness($username, $email);
 
-        $db = DB::GetInstance();
+        $db = DB::Instance();
         $db_prefix = $db->prefix;
 
         $salt = dechex(mt_rand(0, 2147483647)) . dechex(mt_rand(0, 2147483647));
@@ -109,7 +109,7 @@ class AccountManager {
 
     private function validateAccountUniqueness($username, $email)
     {
-        $db = DB::GetInstance();
+        $db = DB::Instance();
         $db_prefix = $db->prefix;
 
         $sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE username = :username";
@@ -127,7 +127,7 @@ class AccountManager {
 
     public function CreateRole($role_name)
     {
-        $db = DB::GetInstance();
+        $db = DB::Instance();
         $db_prefix = $db->prefix;
         $sql = "INSERT INTO {$db_prefix}roles (role_name) VALUES (:role)";
         $db->ExecuteNonQuery($sql, array(':role'=>$role_name));
@@ -135,7 +135,7 @@ class AccountManager {
 
     public function DeleteRole($role_name)
     {
-        $db = DB::GetInstance();
+        $db = DB::Instance();
         $db_prefix = $db->prefix;
         $sql = "DELETE FROM {$db_prefix}roles WHERE role_name = :role";
         $db->ExecuteNonQuery($sql, array(':role'=>$role_name));
@@ -143,7 +143,7 @@ class AccountManager {
 
     public function RenameRole($current_role_name, $new_role_name)
     {
-        $db = DB::GetInstance();
+        $db = DB::Instance();
         $db_prefix = $db->prefix;
         $sql = "UPDATE TABLE {$db_prefix}roles SET role_name = :newrole WHERE role_name = :oldrole";
         $db->ExecuteNonQuery($sql, array(':newrole'=>$new_role_name, ':oldrole'=>$old_role_name));
@@ -154,9 +154,9 @@ class AccountManager {
         $role_id = validateRoleExistance($role_name);
         $user = validateUserExistance($username);
         $user_id = $user['user_id'];
-        $db_prefix = DB::GetInstance()->prefix;
+        $db_prefix = DB::Instance()->prefix;
         $sql = "INSERT INTO {$db_prefix}user_roles (role_id, user_id) VALUES (:role, :user)";
-        DB::GetInstance()->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
+        DB::Instance()->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
     }
 
     public function RemoveUserRole($username, $role)
@@ -164,7 +164,7 @@ class AccountManager {
         $role_id = validateRoleExistance($role_name);
         $user = validateUserExistance($username);
         $user_id = $user['user_id'];
-        $db = DB::GetInstance();
+        $db = DB::Instance();
         $db_prefix = $db->prefix;
         $sql = "DELETE FROM {$db_prefix}user_roles WHERE role_id = :role AND user_id = :user";
         $db->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
@@ -172,7 +172,7 @@ class AccountManager {
 
     private function validateRoleExistance($role_name)
     {
-        $db = DB::GetInstance();
+        $db = DB::Instance();
         $db_prefix = $db->prefix;
 
         $sql = "SELECT TOP 1 role_id FROM {$db_prefix}roles WHERE role_name = :role";
@@ -186,7 +186,7 @@ class AccountManager {
 
     private function validateUserExistance($username)
     {
-        $db = DB::GetInstance();
+        $db = DB::Instance();
         $db_prefix = $db->prefix;
 
         $sql = "SELECT TOP 1 user_id FROM {$db_prefix}users WHERE username = :username";
@@ -217,7 +217,7 @@ class AccountManager {
         $user_row = validateUserExistance($username);
         $token = bin2hex(random_bytes($length));
 
-        $db_prefix = DB::GetInstance()->prefix;
+        $db_prefix = DB::Instance()->prefix;
 
         $sql = "INSERT INTO {$db_prefix}user_tokens (user_id, token, purpose)
                 VALUES (:user, :token, :purpose)";

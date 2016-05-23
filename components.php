@@ -7,7 +7,7 @@ require_once './Components/Accounts/accountmanager.php';
 function InitWebsite(){
     try
     {
-        DB::GetInstance()->ConnectToDatabase();
+        DB::Instance()->ConnectToDatabase();
     }
     catch(Exception $e)
     {
@@ -16,7 +16,7 @@ function InitWebsite(){
 }
 
 function InstallWebsite(){
-    DB::GetInstance()->CreateDatabase();
+    DB::Instance()->CreateDatabase();
 }
 
 ?>
