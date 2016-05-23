@@ -21,9 +21,11 @@ class AccountManager {
 
     private function init()
     {
-        $this->db->ExecuteNonQuery(self::GetCreateUsersTableSQL());
-        $this->db->ExecuteNonQuery(self::GetCreateRolesTableSQL());
-        $this->db->ExecuteNonQuery(self::GetCreateUserRolesTableSQL());
+        $db = DB::GetInstance();
+        $db->ExecuteNonQuery(self::GetCreateUsersTableSQL());
+        $db->ExecuteNonQuery(self::GetCreateRolesTableSQL());
+        $db->ExecuteNonQuery(self::GetCreateUserRolesTableSQL());
+        $db->ExecuteNonQuery(self::GetCreateUserTokensTableSQL());
     }
 
     private static function GetCreateUsersTableSQL()
@@ -35,7 +37,7 @@ class AccountManager {
         		`email` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
         		`password_hash` VARCHAR(128) NULL ,
                 `password_salt` VARCHAR(128) NULL ,
-                `creation_date` TIMESTAMP NULL ,
+                `creation_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         		`last_login` TIMESTAMP NULL ,
                 `status` TINYINT(1) NOT NULL DEFAULT 0,
         		PRIMARY KEY (`user_id`) ,
@@ -71,11 +73,26 @@ class AccountManager {
 		return $sql;
 	}
 
+    private static function GetCreateUserTokensTableSQL()
+	{
+		$db_prefix = DB::GetInstance()->prefix;
+		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_tokens` (
+                `user_id` INT NOT NULL AUTO_INCREMENT ,
+                `token` VARCHAR(100) NOT NULL,
+                `purpose` VARCHAR(100) NOT NULL,
+                `creation_date` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+        		PRIMARY KEY (`user_id`)
+        		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1";
+
+		return $sql;
+	}
+
     public function CreateAccount($username, $password, $email)
     {
         $this->validateAccountUniqueness($username, $email);
 
-        $db_prefix = DB::GetInstance()->prefix;
+        $db = DB::GetInstance();
+        $db_prefix = $db->prefix;
 
         $salt = dechex(mt_rand(0, 2147483647)) . dechex(mt_rand(0, 2147483647));
         $password_hash = hash('sha256', $password . $salt);
@@ -83,25 +100,26 @@ class AccountManager {
         $sql = "INSERT INTO {$db_prefix}users (username, password_hash, password_salt, email)
                 VALUES (:username, :password, :salt, :email)";
 
-        $this->db->ExecuteNonQuery($sql,
-                    array(  ':username'=>$username,
-                            ':password'=>$password_hash,
-                            ':salt'=>$salt,
-                            ':email'=>$email));
+        $db->ExecuteNonQuery($sql,
+                array(':username'=>$username,
+                    ':password'=>$password_hash,
+                    ':salt'=>$salt,
+                    ':email'=>$email));
     }
 
     private function validateAccountUniqueness($username, $email)
     {
-        $db_prefix = DB::GetInstance()->prefix;
+        $db = DB::GetInstance();
+        $db_prefix = $db->prefix;
 
         $sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE username = :username";
-        $row = $this->db->QuerySingleRow($sql, array(':username'=>$username));
+        $row = $db->QuerySingleRow($sql, array(':username'=>$username));
         if ($row){
             throw new Exception("Username already in use");
         }
 
         $sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE email = :email";
-        $row = $this->db->QuerySingleRow($sql, array(':email'=>$email));
+        $row = $db->QuerySingleRow($sql, array(':email'=>$email));
         if ($row){
             throw new Exception("Email already in use");
         }
@@ -109,23 +127,26 @@ class AccountManager {
 
     public function CreateRole($role_name)
     {
-        $db_prefix = DB::GetInstance()->prefix;
+        $db = DB::GetInstance();
+        $db_prefix = $db->prefix;
         $sql = "INSERT INTO {$db_prefix}roles (role_name) VALUES (:role)";
-        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_name));
+        $db->ExecuteNonQuery($sql, array(':role'=>$role_name));
     }
 
     public function DeleteRole($role_name)
     {
-        $db_prefix = DB::GetInstance()->prefix;
+        $db = DB::GetInstance();
+        $db_prefix = $db->prefix;
         $sql = "DELETE FROM {$db_prefix}roles WHERE role_name = :role";
-        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_name));
+        $db->ExecuteNonQuery($sql, array(':role'=>$role_name));
     }
 
     public function RenameRole($current_role_name, $new_role_name)
     {
-        $db_prefix = DB::GetInstance()->prefix;
+        $db = DB::GetInstance();
+        $db_prefix = $db->prefix;
         $sql = "UPDATE TABLE {$db_prefix}roles SET role_name = :newrole WHERE role_name = :oldrole";
-        $this->db->ExecuteNonQuery($sql, array(':newrole'=>$new_role_name, ':oldrole'=>$old_role_name));
+        $db->ExecuteNonQuery($sql, array(':newrole'=>$new_role_name, ':oldrole'=>$old_role_name));
     }
 
     public function AddUserRole($username, $role_name)
@@ -135,7 +156,7 @@ class AccountManager {
         $user_id = $user['user_id'];
         $db_prefix = DB::GetInstance()->prefix;
         $sql = "INSERT INTO {$db_prefix}user_roles (role_id, user_id) VALUES (:role, :user)";
-        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
+        DB::GetInstance()->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
     }
 
     public function RemoveUserRole($username, $role)
@@ -143,17 +164,19 @@ class AccountManager {
         $role_id = validateRoleExistance($role_name);
         $user = validateUserExistance($username);
         $user_id = $user['user_id'];
-        $db_prefix = DB::GetInstance()->prefix;
+        $db = DB::GetInstance();
+        $db_prefix = $db->prefix;
         $sql = "DELETE FROM {$db_prefix}user_roles WHERE role_id = :role AND user_id = :user";
-        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
+        $db->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
     }
 
     private function validateRoleExistance($role_name)
     {
-        $db_prefix = DB::GetInstance()->prefix;
+        $db = DB::GetInstance();
+        $db_prefix = $db->prefix;
 
         $sql = "SELECT TOP 1 role_id FROM {$db_prefix}roles WHERE role_name = :role";
-        $row = $this->db->QuerySingleRow($sql, array(':role'=>$role_name));
+        $row = $db->QuerySingleRow($sql, array(':role'=>$role_name));
         if (!$row){
             throw new Exception("No role found by that name");
         }
@@ -163,10 +186,11 @@ class AccountManager {
 
     private function validateUserExistance($username)
     {
-        $db_prefix = DB::GetInstance()->prefix;
+        $db = DB::GetInstance();
+        $db_prefix = $db->prefix;
 
         $sql = "SELECT TOP 1 user_id FROM {$db_prefix}users WHERE username = :username";
-        $row = $this->db->QuerySingleRow($sql, array(':username'=>$username));
+        $row = $db->QuerySingleRow($sql, array(':username'=>$username));
         if (!$row){
             throw new Exception("No user found with that username");
         }
@@ -188,14 +212,42 @@ class AccountManager {
         return null;
     }
 
-    public function GenerateToken($user, $purpose)
+    public function GenerateToken($username, $purpose)
     {
+        $user_row = validateUserExistance($username);
+        $token = bin2hex(random_bytes($length));
 
+        $db_prefix = DB::GetInstance()->prefix;
+
+        $sql = "INSERT INTO {$db_prefix}user_tokens (user_id, token, purpose)
+                VALUES (:user, :token, :purpose)";
+
+        $db->ExecuteNonQuery($sql,
+                        array(':user'=>$user_row['user_id'],
+                            ':token'=>$token,
+                            ':purpose'=>$purpose));
+
+        return $token;
     }
 
-    public function ValidateToken($user, $purpose, $token)
+    public function ValidateToken($username, $purpose, $token)
     {
+        $user_row = validateUserExistance($username);
+        $sql = "SELECT FROM {$db_prefix}user_tokens
+                WHERE user_id = :user AND purpose = :purpose AND token = :token";
 
+        $row = $db->QuerySingleRow($sql,
+                        array(':user'=>$user_row['user_id'],
+                            ':token'=>$token,
+                            ':purpose'=>$purpose));
+
+        if (!$row) return false;
+
+        $date1 = $row['creation_date'];
+        $date2 = date();
+        $secondsDiff = (int)($date2-$date1);
+
+        return ($secondsDiff < 15*60);
     }
 
 }
