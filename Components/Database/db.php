@@ -3,7 +3,7 @@
 require_once __DIR__.'/../Logger/logger.php';
 require_once __DIR__.'/dbconfig.php';
 
-class DB {
+class DB implements IComponent {
 
     private $dbh;
     private $settings;
@@ -18,8 +18,14 @@ class DB {
 	}
 
     private function __construct() {
+        $this->init();
+    }
+
+    private function init() {
         $this->settings = getDbSettings();
         $this->prefix = $this->settings['db_prefix'];
+
+        ComponentsManager::Instance()->RegisterComponent($this);
     }
 
     public static function Instance()
@@ -31,6 +37,8 @@ class DB {
         }
         return $instance;
     }
+
+    public function GetName() { return "Database"; }
 
     public function CreateDatabase(){
         try{

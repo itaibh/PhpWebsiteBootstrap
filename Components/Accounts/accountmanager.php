@@ -1,9 +1,10 @@
 <?php
+require_once __DIR__.'/../componentsmanager.php';
 require_once __DIR__.'/../Logger/logger.php';
 require_once __DIR__.'/../Database/db.php';
 require_once __DIR__.'/user.php';
 
-class AccountManager {
+class AccountManager implements IComponent {
 
     private function __construct() {
         $this->init();
@@ -19,6 +20,8 @@ class AccountManager {
         return $instance;
     }
 
+    public function GetName() { return "AccountManager"; }
+
     private function init()
     {
         $db = DB::Instance();
@@ -26,6 +29,8 @@ class AccountManager {
         $db->ExecuteNonQuery(self::GetCreateRolesTableSQL());
         $db->ExecuteNonQuery(self::GetCreateUserRolesTableSQL());
         $db->ExecuteNonQuery(self::GetCreateUserTokensTableSQL());
+
+        ComponentsManager::Instance()->RegisterComponent($this);
     }
 
     private static function GetCreateUsersTableSQL()

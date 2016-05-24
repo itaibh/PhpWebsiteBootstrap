@@ -1,5 +1,6 @@
 <?php
 
+require_once './Components/componentsmanager.php';
 require_once './Components/Logger/logger.php';
 require_once './Components/Database/db.php';
 require_once './Components/Accounts/accountmanager.php';
@@ -7,7 +8,8 @@ require_once './Components/Accounts/accountmanager.php';
 function InitWebsite(){
     try
     {
-        DB::Instance()->ConnectToDatabase();
+        $db = ComponentsManager::Instance()->GetComponent('Database');
+        $db->ConnectToDatabase();
     }
     catch(Exception $e)
     {

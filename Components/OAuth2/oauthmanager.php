@@ -1,21 +1,28 @@
 <?php
+require_once __DIR__.'/../componentsmanager.php';
 require_once __DIR__.'/../Logger/logger.php';
 require_once __DIR__.'/../Database/db.php';
 
 interface IOAuthProvider
 {
     public function GetName();
-    public function GetLoginUrl($state, $redirect_url);
+    public function GetLoginUrl($state);
 }
 
-class OAuthManager
+class OAuthManager implements IComponent
 {
     private $providers = array();
+
+    private function __construct() {
+        $this->init();
+    }
 
     private function init()
     {
         $db = DB::Instance();
         $db->ExecuteNonQuery(self::GetOAuthUserTokensTableSQL());
+
+        ComponentsManager::Instance()->RegisterComponent($this);
     }
 
     public static function Instance()
@@ -27,6 +34,8 @@ class OAuthManager
         }
         return $instance;
     }
+
+    public function GetName() { return "OAuthManager"; }
 
     private static function GetOAuthUserTokensTableSQL()
 	{

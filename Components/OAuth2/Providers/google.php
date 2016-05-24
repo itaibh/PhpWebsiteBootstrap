@@ -17,8 +17,9 @@ class GoogleOAuthProvider implements IOAuthProvider
 
     function GetName() { return "google"; }
 
-    function GetLoginUrl($state, $redirect_url){
+    function GetLoginUrl($state){
         $ep = this->GetDiscoveryDocument()->authorization_endpoint;
+        $redirect_url = 'http://'.$_SERVER['SERVER_NAME'].'/oauth/google';
         $url = "{$ep}?scope=profile%20email&state={$state}&redirect_uri={$redirect_url}&response_type=code&client_id={$this->client_id}";
         return $url;
     }
