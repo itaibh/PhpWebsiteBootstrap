@@ -2,10 +2,16 @@
 
 interface IComponent {
     public function Init();
+    public function TryHandleRequest();
 }
 
 abstract class ComponentBase implements IComponent{
     public abstract function Init();
+
+    public function TryHandleRequest()
+    {
+        return false;
+    }
 
     public static function Instance()
     {
@@ -66,9 +72,13 @@ class ComponentsManager {
         {
             self::getLogger()->log_info("creating components manager");
             $instance = new static();
-            $instance->RegisterComponents(['Database','AccountManager','OAuth2']);
         }
         return $instance;
+    }
+
+    public function Init()
+    {
+        $this->RegisterComponents(['Database','AccountManager','OAuth2']);
     }
 
     private static function getLogger() {
@@ -108,16 +118,13 @@ class ComponentsManager {
 
     public function HandleRequest()
     {
-        $reqUri = $_SERVER['REQUEST_URI'];
-        $reqUriParts =  explode('?', $reqUri);
-        global $requestURI;
-        $requestURI = explode('/', $reqUriParts[0]);
-
-        if ($requestURI[1] == 'oauth')
+        foreach ($this->components as $name => $container)
         {
-            $lastPart = explode('?',$requestURI[2]);
-            include "./Components/OAuth2/Providers/{$lastPart[0]}.php";
-            die;
+            $container->TryInit();
+            if ($container->component->TryHandleRequest())
+            {
+                break;
+            }
         }
     }
 }

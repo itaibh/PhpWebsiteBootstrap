@@ -1,12 +1,7 @@
 <?php
 require_once __DIR__.'/../componentsmanager.php';
 require_once __DIR__.'/../Logger/init.php';
-
-interface IOAuthProvider
-{
-    public function GetName();
-    public function GetLoginUrl($state);
-}
+require_once __DIR__.'/ioauthprovider.php';
 
 class OAuth2 extends ComponentBase
 {
@@ -47,10 +42,22 @@ class OAuth2 extends ComponentBase
         return $this->providers[$provider_name];
     }
 
-    public function HandleRequest()
+    public function TryHandleRequest()
     {
-        $provider = $this->providers[($_GET['oauth_provider'])];
+        $reqUri = $_SERVER['REQUEST_URI'];
+        $reqUriParts =  explode('?', $reqUri);
+        $requestURI = explode('/', $reqUriParts[0]);
+
+        if ($requestURI[1] != 'oauth')
+        {
+            return false;
+        }
+
+        $lastPart = explode('?',$requestURI[2]);
+        $provider = $this->providers[$lastPart];
         $provider->HandleRequest();
+
+        return true;
     }
 }
 
