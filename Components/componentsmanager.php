@@ -7,7 +7,7 @@ interface IComponent {
 class ComponentsManager {
 
     private __construct() {
-        $this->RegisterComponents(['Logger','Database','Accounts','OAuth2']);
+        $this->RegisterComponents(['Database','Accounts','OAuth2']);
     }
 
     private $components = array();
@@ -27,11 +27,14 @@ class ComponentsManager {
         foreach ($component_names_array as $component_name)
         {
             include __DIR__ . "/Components/{$component_name}/init.php";
+            $component_name
         }
     }
 
-    public function RegisterComponent($component){
+    public function RegisterComponent($component)
+    {
         $this->components[$component->GetName()] = $component;
+
     }
 
     public function GetComponent($component_name)

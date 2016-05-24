@@ -1,10 +1,10 @@
 <?php
 require_once __DIR__.'/../componentsmanager.php';
-require_once __DIR__.'/../Logger/logger.php';
-require_once __DIR__.'/../Database/db.php';
 require_once __DIR__.'/user.php';
 
 class AccountManager implements IComponent {
+
+    private $db;
 
     private function __construct() {
         $this->init();
@@ -24,18 +24,17 @@ class AccountManager implements IComponent {
 
     private function init()
     {
-        $db = DB::Instance();
-        $db->ExecuteNonQuery(self::GetCreateUsersTableSQL());
-        $db->ExecuteNonQuery(self::GetCreateRolesTableSQL());
-        $db->ExecuteNonQuery(self::GetCreateUserRolesTableSQL());
-        $db->ExecuteNonQuery(self::GetCreateUserTokensTableSQL());
+        $this->db = ComponentsManager::Instance()->GetComponent('Database');
 
-        ComponentsManager::Instance()->RegisterComponent($this);
+        $this->db->ExecuteNonQuery(self::GetCreateUsersTableSQL());
+        $this->db->ExecuteNonQuery(self::GetCreateRolesTableSQL());
+        $this->db->ExecuteNonQuery(self::GetCreateUserRolesTableSQL());
+        $this->db->ExecuteNonQuery(self::GetCreateUserTokensTableSQL());
     }
 
     private static function GetCreateUsersTableSQL()
 	{
-		$db_prefix = DB::Instance()->prefix;
+		$db_prefix = $this->db->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}users` (
                 `user_id` INT NOT NULL AUTO_INCREMENT,
         		`username` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
@@ -55,8 +54,8 @@ class AccountManager implements IComponent {
 
     private static function GetCreateRolesTableSQL()
 	{
-		$db_prefix = DB::Instance()->prefix;
-		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}roles` (
+        $db_prefix = $this->db->prefix;
+	    $sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}roles` (
                 `role_id` INT NOT NULL AUTO_INCREMENT ,
         		`role_name` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
         		PRIMARY KEY (`role_id`) ,
@@ -68,7 +67,7 @@ class AccountManager implements IComponent {
 
     private static function GetCreateUserRolesTableSQL()
 	{
-		$db_prefix = DB::Instance()->prefix;
+        $db_prefix = $this->db->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_roles` (
                 `user_id` INT NOT NULL,
                 `role_id` INT NOT NULL,
@@ -80,7 +79,7 @@ class AccountManager implements IComponent {
 
     private static function GetCreateUserTokensTableSQL()
 	{
-		$db_prefix = DB::Instance()->prefix;
+        $db_prefix = $this->db->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_tokens` (
                 `user_id` INT NOT NULL,
                 `token` VARCHAR(100) NOT NULL,
@@ -96,8 +95,7 @@ class AccountManager implements IComponent {
     {
         $this->validateAccountUniqueness($username, $email);
 
-        $db = DB::Instance();
-        $db_prefix = $db->prefix;
+        $db_prefix = $this->db->prefix;
 
         $salt = dechex(mt_rand(0, 2147483647)) . dechex(mt_rand(0, 2147483647));
         $password_hash = hash('sha256', $password . $salt);
@@ -105,7 +103,7 @@ class AccountManager implements IComponent {
         $sql = "INSERT INTO {$db_prefix}users (username, password_hash, password_salt, email)
                 VALUES (:username, :password, :salt, :email)";
 
-        $db->ExecuteNonQuery($sql,
+        $this->db->ExecuteNonQuery($sql,
                 array(':username'=>$username,
                     ':password'=>$password_hash,
                     ':salt'=>$salt,
@@ -114,11 +112,10 @@ class AccountManager implements IComponent {
 
     private function validateAccountUniqueness($username, $email)
     {
-        $db = DB::Instance();
-        $db_prefix = $db->prefix;
+        $db_prefix = $this->db->prefix;
 
         $sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE username = :username";
-        $row = $db->QuerySingleRow($sql, array(':username'=>$username));
+        $row = $this->db->QuerySingleRow($sql, array(':username'=>$username));
         if ($row){
             throw new Exception("Username already in use");
         }
@@ -132,26 +129,23 @@ class AccountManager implements IComponent {
 
     public function CreateRole($role_name)
     {
-        $db = DB::Instance();
-        $db_prefix = $db->prefix;
+        $db_prefix = $this->db->prefix;
         $sql = "INSERT INTO {$db_prefix}roles (role_name) VALUES (:role)";
-        $db->ExecuteNonQuery($sql, array(':role'=>$role_name));
+        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_name));
     }
 
     public function DeleteRole($role_name)
     {
-        $db = DB::Instance();
-        $db_prefix = $db->prefix;
+        $db_prefix = $this->db->prefix;
         $sql = "DELETE FROM {$db_prefix}roles WHERE role_name = :role";
-        $db->ExecuteNonQuery($sql, array(':role'=>$role_name));
+        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_name));
     }
 
     public function RenameRole($current_role_name, $new_role_name)
     {
-        $db = DB::Instance();
-        $db_prefix = $db->prefix;
+        $db_prefix = $this->db->prefix;
         $sql = "UPDATE TABLE {$db_prefix}roles SET role_name = :newrole WHERE role_name = :oldrole";
-        $db->ExecuteNonQuery($sql, array(':newrole'=>$new_role_name, ':oldrole'=>$old_role_name));
+        $this->db->ExecuteNonQuery($sql, array(':newrole'=>$new_role_name, ':oldrole'=>$old_role_name));
     }
 
     public function AddUserRole($username, $role_name)
@@ -159,9 +153,9 @@ class AccountManager implements IComponent {
         $role_id = validateRoleExistance($role_name);
         $user = validateUserExistance($username);
         $user_id = $user['user_id'];
-        $db_prefix = DB::Instance()->prefix;
+        $db_prefix = $this->db->prefix;
         $sql = "INSERT INTO {$db_prefix}user_roles (role_id, user_id) VALUES (:role, :user)";
-        DB::Instance()->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
+        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
     }
 
     public function RemoveUserRole($username, $role)
@@ -169,19 +163,16 @@ class AccountManager implements IComponent {
         $role_id = validateRoleExistance($role_name);
         $user = validateUserExistance($username);
         $user_id = $user['user_id'];
-        $db = DB::Instance();
-        $db_prefix = $db->prefix;
+        $db_prefix = $this->db->prefix;
         $sql = "DELETE FROM {$db_prefix}user_roles WHERE role_id = :role AND user_id = :user";
-        $db->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
+        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
     }
 
     private function validateRoleExistance($role_name)
     {
-        $db = DB::Instance();
-        $db_prefix = $db->prefix;
-
+        $db_prefix = $this->db->prefix;
         $sql = "SELECT TOP 1 role_id FROM {$db_prefix}roles WHERE role_name = :role";
-        $row = $db->QuerySingleRow($sql, array(':role'=>$role_name));
+        $row = $this->db->QuerySingleRow($sql, array(':role'=>$role_name));
         if (!$row){
             throw new Exception("No role found by that name");
         }
@@ -191,11 +182,9 @@ class AccountManager implements IComponent {
 
     private function validateUserExistance($username)
     {
-        $db = DB::Instance();
-        $db_prefix = $db->prefix;
-
+        $db_prefix = $this->db->prefix;
         $sql = "SELECT TOP 1 user_id FROM {$db_prefix}users WHERE username = :username";
-        $row = $db->QuerySingleRow($sql, array(':username'=>$username));
+        $row = $this->db->QuerySingleRow($sql, array(':username'=>$username));
         if (!$row){
             throw new Exception("No user found with that username");
         }
@@ -222,12 +211,12 @@ class AccountManager implements IComponent {
         $user_row = validateUserExistance($username);
         $token = bin2hex(random_bytes($length));
 
-        $db_prefix = DB::Instance()->prefix;
+        $db_prefix = $this->db->prefix;
 
         $sql = "INSERT INTO {$db_prefix}user_tokens (user_id, token, purpose)
                 VALUES (:user, :token, :purpose)";
 
-        $db->ExecuteNonQuery($sql,
+        $this->db->ExecuteNonQuery($sql,
                         array(':user'=>$user_row['user_id'],
                             ':token'=>$token,
                             ':purpose'=>$purpose));
@@ -241,7 +230,7 @@ class AccountManager implements IComponent {
         $sql = "SELECT FROM {$db_prefix}user_tokens
                 WHERE user_id = :user AND purpose = :purpose AND token = :token";
 
-        $row = $db->QuerySingleRow($sql,
+        $row = $this->db->QuerySingleRow($sql,
                         array(':user'=>$user_row['user_id'],
                             ':token'=>$token,
                             ':purpose'=>$purpose));

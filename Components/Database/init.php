@@ -1,9 +1,9 @@
 <?php
 
-require_once __DIR__.'/../Logger/logger.php';
+require_once __DIR__.'/../Logger/init.php';
 require_once __DIR__.'/dbconfig.php';
 
-class DB implements IComponent {
+class Database implements IComponent {
 
     private $dbh;
     private $settings;
@@ -24,8 +24,6 @@ class DB implements IComponent {
     private function init() {
         $this->settings = getDbSettings();
         $this->prefix = $this->settings['db_prefix'];
-
-        ComponentsManager::Instance()->RegisterComponent($this);
     }
 
     public static function Instance()

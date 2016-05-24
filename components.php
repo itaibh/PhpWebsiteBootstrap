@@ -2,8 +2,6 @@
 
 require_once './Components/componentsmanager.php';
 require_once './Components/Logger/logger.php';
-require_once './Components/Database/db.php';
-require_once './Components/Accounts/accountmanager.php';
 
 function InitWebsite(){
     try
@@ -18,7 +16,8 @@ function InitWebsite(){
 }
 
 function InstallWebsite(){
-    DB::Instance()->CreateDatabase();
+    $db = ComponentsManager::Instance()->GetComponent('Database');
+    $db->CreateDatabase();
 }
 
 ?>

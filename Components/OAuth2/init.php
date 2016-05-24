@@ -12,6 +12,7 @@ interface IOAuthProvider
 class OAuthManager implements IComponent
 {
     private $providers = array();
+    private $db;
 
     private function __construct() {
         $this->init();
@@ -19,10 +20,8 @@ class OAuthManager implements IComponent
 
     private function init()
     {
-        $db = DB::Instance();
-        $db->ExecuteNonQuery(self::GetOAuthUserTokensTableSQL());
-
-        ComponentsManager::Instance()->RegisterComponent($this);
+        $this->db = ComponentsManager::Instance()->GetComponent('Database');
+        $this->db->ExecuteNonQuery(self::GetOAuthUserTokensTableSQL());
     }
 
     public static function Instance()
@@ -39,7 +38,7 @@ class OAuthManager implements IComponent
 
     private static function GetOAuthUserTokensTableSQL()
 	{
-		$db_prefix = DB::Instance()->prefix;
+		$db_prefix = $this->db->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}oauth_user_tokens` (
                 `user_id` INT NOT NULL,
                 `service` VARCHAR(20) COLLATE utf8_unicode_ci NOT NULL,
