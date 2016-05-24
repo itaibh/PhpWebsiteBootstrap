@@ -6,7 +6,7 @@ class Logger{
 
     private $m_prefix;
     public function log_info($message){
-        error_log('[INFO]' . $this->m_prefix. ' - ' . $message);
+        error_log('[INFO] ' . $this->m_prefix. ' - ' . $message);
     }
 
     public function log_error($message) {

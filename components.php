@@ -1,23 +1,18 @@
 <?php
 
 require_once './Components/componentsmanager.php';
-require_once './Components/Logger/logger.php';
+require_once './Components/Logger/init.php';
 
 function InitWebsite(){
+    $logger = new Logger(__FUNCTION__);
     try
     {
         $db = ComponentsManager::Instance()->GetComponent('Database');
-        $db->ConnectToDatabase();
     }
     catch(Exception $e)
     {
-        InstallWebsite();
+        $logger->log_error($e);
     }
-}
-
-function InstallWebsite(){
-    $db = ComponentsManager::Instance()->GetComponent('Database');
-    $db->CreateDatabase();
 }
 
 ?>

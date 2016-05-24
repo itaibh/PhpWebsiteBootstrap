@@ -2,39 +2,33 @@
 require_once __DIR__.'/../componentsmanager.php';
 require_once __DIR__.'/user.php';
 
-class AccountManager implements IComponent {
+class AccountManager extends ComponentBase {
 
     private $db;
 
-    private function __construct() {
-        $this->init();
-    }
+    protected function __construct() {}
+    private function __clone() {}
+    private function __wakeup() {}
 
-    public static function Instance()
-    {
-        static $instance = null;
-        if ($instance === null)
-        {
-            $instance = new static();
-        }
-        return $instance;
-    }
-
-    public function GetName() { return "AccountManager"; }
-
-    private function init()
+    public function Init()
     {
         $this->db = ComponentsManager::Instance()->GetComponent('Database');
 
-        $this->db->ExecuteNonQuery(self::GetCreateUsersTableSQL());
-        $this->db->ExecuteNonQuery(self::GetCreateRolesTableSQL());
-        $this->db->ExecuteNonQuery(self::GetCreateUserRolesTableSQL());
-        $this->db->ExecuteNonQuery(self::GetCreateUserTokensTableSQL());
+        self::getLogger()->log_info("creating users table");
+        $this->db->ExecuteNonQuery(self::GetCreateUsersTableSQL($this->db->prefix));
+
+        self::getLogger()->log_info("creating roles table");
+        $this->db->ExecuteNonQuery(self::GetCreateRolesTableSQL($this->db->prefix));
+
+        self::getLogger()->log_info("creating user-roles table");
+        $this->db->ExecuteNonQuery(self::GetCreateUserRolesTableSQL($this->db->prefix));
+
+        self::getLogger()->log_info("creating user-tokens table");
+        $this->db->ExecuteNonQuery(self::GetCreateUserTokensTableSQL($this->db->prefix));
     }
 
-    private static function GetCreateUsersTableSQL()
+    private static function GetCreateUsersTableSQL($db_prefix)
 	{
-		$db_prefix = $this->db->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}users` (
                 `user_id` INT NOT NULL AUTO_INCREMENT,
         		`username` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
@@ -52,9 +46,8 @@ class AccountManager implements IComponent {
 		return $sql;
 	}
 
-    private static function GetCreateRolesTableSQL()
+    private static function GetCreateRolesTableSQL($db_prefix)
 	{
-        $db_prefix = $this->db->prefix;
 	    $sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}roles` (
                 `role_id` INT NOT NULL AUTO_INCREMENT ,
         		`role_name` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
@@ -65,9 +58,8 @@ class AccountManager implements IComponent {
 		return $sql;
 	}
 
-    private static function GetCreateUserRolesTableSQL()
+    private static function GetCreateUserRolesTableSQL($db_prefix)
 	{
-        $db_prefix = $this->db->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_roles` (
                 `user_id` INT NOT NULL,
                 `role_id` INT NOT NULL,
@@ -77,9 +69,8 @@ class AccountManager implements IComponent {
 		return $sql;
 	}
 
-    private static function GetCreateUserTokensTableSQL()
+    private static function GetCreateUserTokensTableSQL($db_prefix)
 	{
-        $db_prefix = $this->db->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_tokens` (
                 `user_id` INT NOT NULL,
                 `token` VARCHAR(100) NOT NULL,

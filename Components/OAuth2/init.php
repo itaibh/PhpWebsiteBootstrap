@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__.'/../componentsmanager.php';
-require_once __DIR__.'/../Logger/logger.php';
-require_once __DIR__.'/../Database/db.php';
+require_once __DIR__.'/../Logger/init.php';
 
 interface IOAuthProvider
 {
@@ -9,41 +8,30 @@ interface IOAuthProvider
     public function GetLoginUrl($state);
 }
 
-class OAuthManager implements IComponent
+class OAuth2 extends ComponentBase
 {
     private $providers = array();
     private $db;
 
-    private function __construct() {
-        $this->init();
-    }
+    protected function __construct() {}
+    private function __clone() {}
+    private function __wakeup() {}
 
-    private function init()
+    public function Init()
     {
         $this->db = ComponentsManager::Instance()->GetComponent('Database');
-        $this->db->ExecuteNonQuery(self::GetOAuthUserTokensTableSQL());
+
+        self::getLogger()->log_info("creating oauth-users tokens table");
+        $this->db->ExecuteNonQuery(self::GetOAuthUserTokensTableSQL($this->db->prefix));
     }
 
-    public static function Instance()
-    {
-        static $instance = null;
-        if ($instance === null)
-        {
-            $instance = new static();
-        }
-        return $instance;
-    }
-
-    public function GetName() { return "OAuthManager"; }
-
-    private static function GetOAuthUserTokensTableSQL()
+    private static function GetOAuthUserTokensTableSQL($db_prefix)
 	{
-		$db_prefix = $this->db->prefix;
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}oauth_user_tokens` (
                 `user_id` INT NOT NULL,
                 `service` VARCHAR(20) COLLATE utf8_unicode_ci NOT NULL,
         		`token` TEXT COLLATE utf8_unicode_ci NOT NULL,
-        		PRIMARY KEY (`user_id`,`service`),
+        		PRIMARY KEY (`user_id`,`service`)
         		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1";
 
 		return $sql;
