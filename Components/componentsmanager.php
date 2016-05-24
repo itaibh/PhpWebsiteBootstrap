@@ -26,7 +26,7 @@ class ComponentsManager {
     {
         foreach ($component_names_array as $component_name)
         {
-            include __DIR__ . "/Components/{$component_name}/{$component_name}.php";
+            include __DIR__ . "/Components/{$component_name}/init.php";
         }
     }
 
