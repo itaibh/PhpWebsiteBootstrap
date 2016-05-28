@@ -55,9 +55,45 @@ class OAuth2 extends ComponentBase
 
         $lastPart = explode('?',$requestURI[2]);
         $provider = $this->providers[$lastPart];
-        $provider->HandleRequest();
+        $this->HandleRequest($provider);
 
         return true;
+    }
+
+    private function HandleRequest($provider)
+    {
+        //$provider->HandleRequest();
+        $oauthdata = $provider->GetOAuthDataFromRequest();
+        $token = $oauthdata->GetToken();
+        $user = $this->findUserByOAuthToken($token, $provider);
+        if ($user === null)
+        {
+            $email = $oauthdata->GetEmail();
+            if (isset($email) && $oauthdata->IsEmailVerified() === true)
+            {
+                $user = $this->findUserByEmail($oauthdata->GetEmail(), $provider);
+            }
+        }
+    }
+
+    private function findUserByOAuthToken($token, $provider)
+    {
+        $db_prefix = $this->db->prefix;
+        $sql = "SELECT * FROM `{$db_prefix}oauth_user_tokens` WHERE token = :token & service = :service";
+        $row = $this->db->QuerySingleRow($sql, array(':token'=>$token, ':service'=>$provider->GetName()));
+        if ($row != null)
+        {
+            //$user = get user from $row;
+            return $user;
+        }
+        return null;
+    }
+
+    private function findUserByEmail($email, $provider)
+    {
+        //$user = User::QueryByEmail($idTokenJson->email);
+        //$stmt = $dbh->prepare("UPDATE `{$db_prefix}Users` SET `Google ID Token`=? WHERE `User Email`=?");
+        //$stmt->execute(array($idTokenJson->sub, $idTokenJson->email));
     }
 }
 

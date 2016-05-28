@@ -15,19 +15,19 @@ class AccountManager extends ComponentBase {
         $this->db = ComponentsManager::Instance()->GetComponent('Database');
 
         self::getLogger()->log_info("creating users table");
-        $this->db->ExecuteNonQuery(self::GetCreateUsersTableSQL($this->db->prefix));
+        $this->db->ExecuteNonQuery(self::getCreateUsersTableSQL($this->db->prefix));
 
         self::getLogger()->log_info("creating roles table");
-        $this->db->ExecuteNonQuery(self::GetCreateRolesTableSQL($this->db->prefix));
+        $this->db->ExecuteNonQuery(self::getCreateRolesTableSQL($this->db->prefix));
 
         self::getLogger()->log_info("creating user-roles table");
-        $this->db->ExecuteNonQuery(self::GetCreateUserRolesTableSQL($this->db->prefix));
+        $this->db->ExecuteNonQuery(self::getCreateUserRolesTableSQL($this->db->prefix));
 
         self::getLogger()->log_info("creating user-tokens table");
-        $this->db->ExecuteNonQuery(self::GetCreateUserTokensTableSQL($this->db->prefix));
+        $this->db->ExecuteNonQuery(self::getCreateUserTokensTableSQL($this->db->prefix));
     }
 
-    private static function GetCreateUsersTableSQL($db_prefix)
+    private static function getCreateUsersTableSQL($db_prefix)
 	{
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}users` (
                 `user_id` INT NOT NULL AUTO_INCREMENT,
@@ -46,7 +46,7 @@ class AccountManager extends ComponentBase {
 		return $sql;
 	}
 
-    private static function GetCreateRolesTableSQL($db_prefix)
+    private static function getCreateRolesTableSQL($db_prefix)
 	{
 	    $sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}roles` (
                 `role_id` INT NOT NULL AUTO_INCREMENT ,
@@ -58,7 +58,7 @@ class AccountManager extends ComponentBase {
 		return $sql;
 	}
 
-    private static function GetCreateUserRolesTableSQL($db_prefix)
+    private static function getCreateUserRolesTableSQL($db_prefix)
 	{
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_roles` (
                 `user_id` INT NOT NULL,
@@ -69,7 +69,7 @@ class AccountManager extends ComponentBase {
 		return $sql;
 	}
 
-    private static function GetCreateUserTokensTableSQL($db_prefix)
+    private static function getCreateUserTokensTableSQL($db_prefix)
 	{
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_tokens` (
                 `user_id` INT NOT NULL,

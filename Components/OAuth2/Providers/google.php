@@ -39,22 +39,28 @@ class GoogleOAuthProvider implements IOAuthProvider
         fclose($handle);
     }
 
-    public function HandleRequest()
+    private function validateRequest()
     {
-        $state = $_GET["state"];
-        parse_str($state, $stateArgs);
-
         if (isset($_GET["error"]))
         {
             $error = $_GET["error"];
-            die;
+            throw new Exception("Google OAuth Error: " . $error);
         }
+    }
 
-        if (isset($_GET["code"]))
-        {
-            $code = $_GET["code"];
-        }
+    private function parseGoogleOAuthResponse($resp)
+    {
+        //echo $resp;
+        $respJson = json_decode($resp);
+        $idTokenParts = explode('.',$respJson->id_token);
+        $idTokenParsed = base64_decode($idTokenParts[1]);
+        //echo $idTokenParsed;
+        $idTokenJson = json_decode($idTokenParsed);
+        return $idTokenJson;
+    }
 
+    private function getOAuthTokenFromGoogle($code)
+    {
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_RETURNTRANSFER => 1,
@@ -69,18 +75,38 @@ class GoogleOAuthProvider implements IOAuthProvider
             ));
         $resp = curl_exec($curl);
         curl_close($curl);
-        //echo $resp;
-        $respJson = json_decode($resp);
-        $idTokenParts = explode('.',$respJson->id_token);
-        $idTokenParsed = base64_decode($idTokenParts[1]);
-        //echo $idTokenParsed;
-        $idTokenJson = json_decode($idTokenParsed);
+        $idTokenJson = $this->parseGoogleOAuthResponse($resp);
+        return $idTokenJson;
+    }
 
-        $dbh = get_db();
-        $db_prefix = constant('db_prefix');
-        $stmt = $dbh->prepare("SELECT * FROM `{$db_prefix}Users` AS Users WHERE Users.`Google ID Token` = ?");
-        $stmt->execute(array($idTokenJson->sub));
-        $row = $stmt->fetch();
+    private function extractOAuthDataFromRequest()
+    {
+        $this->validateRequest();
+
+        if (isset($_GET["code"]))
+        {
+            $code = $_GET["code"];
+        }
+
+        $idTokenJson = $this->getOAuthTokenFromGoogle($code);
+        return $idTokenJson;
+    }
+
+    public function GetOAuthDataFromRequest()
+    {
+        $idTokenJson = $this->extractOAuthDataFromRequest();
+        return new OAuthData($idTokenJson->sub, $idTokenJson->email, $idTokenJson->email_verified);
+    }
+
+    public function HandleRequest()
+    {
+        $idTokenJson = $this->extractOAuthDataFromRequest();
+
+        //$dbh = get_db();
+        //$db_prefix = constant('db_prefix');
+        //$stmt = $dbh->prepare("SELECT * FROM `{$db_prefix}Users` AS Users WHERE Users.`Google ID Token` = ?");
+        //$stmt->execute(array($idTokenJson->sub));
+        //$row = $stmt->fetch();
 
         if ($row == null)
         {
@@ -104,22 +130,20 @@ class GoogleOAuthProvider implements IOAuthProvider
                                      str_replace('sz=50','sz=128',$personData->picture),
                                      $idTokenJson->sub);
                     */
-                    $_SESSION['LoggedInUser'] = $user;
-                    header("Location: " . host() . $stateArgs["url"]);
-                }
-                else
-                {
-                    $_SESSION['LoggedInUser'] = $user;
-                    header("Location: " . host() . $stateArgs["url"]);
                 }
             }
         }
         else
         {
             $user = User::CreateFromMapArray($row);
-            $_SESSION['LoggedInUser'] = $user;
-            header("Location: " . host() . $stateArgs["url"]);
         }
+
+        $state = $_GET['state'];
+        parse_str($state, $stateArgs);
+        $url = $stateArgs['url'];
+
+        $_SESSION['LoggedInUser'] = $user;
+        header("Location: " . host() . $url);
     }
 }
 ?>
