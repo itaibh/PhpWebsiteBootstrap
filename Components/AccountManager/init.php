@@ -31,8 +31,8 @@ class AccountManager extends ComponentBase {
 	{
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}users` (
                 `user_id` INT NOT NULL AUTO_INCREMENT,
-        		`username` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
-        		`email` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
+        		`username` VARCHAR(100) NULL,
+        		`email` VARCHAR(100) NOT NULL,
         		`password_hash` VARCHAR(128) NULL ,
                 `password_salt` VARCHAR(128) NULL ,
                 `creation_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -88,8 +88,16 @@ class AccountManager extends ComponentBase {
 
         $db_prefix = $this->db->prefix;
 
-        $salt = dechex(mt_rand(0, 2147483647)) . dechex(mt_rand(0, 2147483647));
-        $password_hash = hash('sha256', $password . $salt);
+        if ($password != null)
+        {
+            $salt = dechex(mt_rand(0, 2147483647)) . dechex(mt_rand(0, 2147483647));
+            $password_hash = hash('sha256', $password . $salt);
+        }
+        else
+        {
+            $salt = null;
+            $password_hash = null;
+        }
 
         $sql = "INSERT INTO {$db_prefix}users (username, password_hash, password_salt, email)
                 VALUES (:username, :password, :salt, :email)";
@@ -105,10 +113,13 @@ class AccountManager extends ComponentBase {
     {
         $db_prefix = $this->db->prefix;
 
-        $sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE username = :username";
-        $row = $this->db->QuerySingleRow($sql, array(':username'=>$username));
-        if ($row){
-            throw new Exception("Username already in use");
+        if ($username != null)
+        {
+            $sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE username = :username";
+            $row = $this->db->QuerySingleRow($sql, array(':username'=>$username));
+            if ($row){
+                throw new Exception("Username already in use");
+            }
         }
 
         $sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE email = :email";
@@ -171,6 +182,18 @@ class AccountManager extends ComponentBase {
         return $row['role_id'];
     }
 
+    public function GetUserByEmail($email)
+    {
+        $db_prefix = $this->db->prefix;
+        $sql = "SELECT TOP 1 user_id FROM {$db_prefix}users WHERE email = :email";
+        $row = $this->db->QuerySingleRow($sql, array(':email'=>$email));
+        if (!$row) {
+            return null;
+        }
+
+        return $this->createUserFromUserDbRow($row);
+    }
+
     private function validateUserExistance($username)
     {
         $db_prefix = $this->db->prefix;
@@ -190,7 +213,7 @@ class AccountManager extends ComponentBase {
         $password_hash = hash('sha256', $password . $salt);
 
         if ($password_hash == $user['password_hash']) {
-            $user = new User($user_row['user_id'], $user_row['username'], $user_row['email']);
+            $user = $this->createUserFromUserDbRow($user_row);
             return $user;
         }
 
@@ -235,6 +258,11 @@ class AccountManager extends ComponentBase {
         return ($secondsDiff < 15*60);
     }
 
+    private function createUserFromUserDbRow($row)
+    {
+        $user = new User($row['user_id'], $row['username'], $row['email']);
+        return $user;
+    }
 }
 
  ?>

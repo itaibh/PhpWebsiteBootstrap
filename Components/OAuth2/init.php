@@ -7,6 +7,7 @@ class OAuth2 extends ComponentBase
 {
     private $providers = array();
     private $db;
+    private $accountManager;
 
     protected function __construct() {}
     private function __clone() {}
@@ -15,6 +16,7 @@ class OAuth2 extends ComponentBase
     public function Init()
     {
         $this->db = ComponentsManager::Instance()->GetComponent('Database');
+        $this->accountManager = ComponentsManager::Instance()->GetComponent('AccountManager');
 
         self::getLogger()->log_info("creating oauth-users tokens table");
         $this->db->ExecuteNonQuery(self::GetOAuthUserTokensTableSQL($this->db->prefix));
@@ -62,7 +64,6 @@ class OAuth2 extends ComponentBase
 
     private function HandleRequest($provider)
     {
-        //$provider->HandleRequest();
         $oauthdata = $provider->GetOAuthDataFromRequest();
         $token = $oauthdata->GetToken();
         $user = $this->findUserByOAuthToken($token, $provider);
@@ -71,7 +72,7 @@ class OAuth2 extends ComponentBase
             $email = $oauthdata->GetEmail();
             if (isset($email) && $oauthdata->IsEmailVerified() === true)
             {
-                $user = $this->findUserByEmail($oauthdata->GetEmail(), $provider);
+                $user = $this->updateOAuthTokenByEmail($oauthdata->GetEmail(), $provider);
             }
         }
     }
@@ -89,11 +90,19 @@ class OAuth2 extends ComponentBase
         return null;
     }
 
-    private function findUserByEmail($email, $provider)
+    private function updateOAuthTokenByEmail($email, $provider)
     {
-        //$user = User::QueryByEmail($idTokenJson->email);
-        //$stmt = $dbh->prepare("UPDATE `{$db_prefix}Users` SET `Google ID Token`=? WHERE `User Email`=?");
-        //$stmt->execute(array($idTokenJson->sub, $idTokenJson->email));
+        $user = $this->accountManager->GetUserByEmail($email);
+        $db_prefix = $this->db->prefix;
+        if ($user === null)
+        {
+            $this->accountManager->CreateAccount(null, null, $email);
+        }
+
+        $sql = "INSERT INTO `{$db_prefix}oauth_user_tokens` (user_id, service, token) VALUES(:user_id, :service, :token)";
+        $this->db->ExecuteNonQuery($sql, array('user_id'=>$user->GetId(), ':token'=>$token, ':service'=>$provider->GetName()));
+
+        return $user;
     }
 }
 
