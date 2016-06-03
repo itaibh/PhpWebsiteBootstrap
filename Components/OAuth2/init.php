@@ -2,6 +2,7 @@
 require_once __DIR__.'/../componentsmanager.php';
 require_once __DIR__.'/../Logger/init.php';
 require_once __DIR__.'/ioauthprovider.php';
+require_once __DIR__.'/oauthuserdata.php';
 
 class OAuth2 extends ComponentBase
 {
@@ -19,20 +20,21 @@ class OAuth2 extends ComponentBase
         $this->accountManager = ComponentsManager::Instance()->GetComponent('AccountManager');
 
         self::getLogger()->log_info("creating oauth-users tokens table");
-        $this->db->ExecuteNonQuery(self::GetOAuthUserTokensTableSQL($this->db->prefix));
+        $this->db->CreateTable('OAuthUserData');
+        //$this->db->ExecuteNonQuery(self::GetOAuthUserTokensTableSQL($this->db->prefix));
     }
 
-    private static function GetOAuthUserTokensTableSQL($db_prefix)
+    /*private static function GetOAuthUserTokensTableSQL($db_prefix)
 	{
 		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}oauth_user_tokens` (
                 `user_id` INT NOT NULL,
-                `service` VARCHAR(20) COLLATE utf8_unicode_ci NOT NULL,
-        		`token` TEXT COLLATE utf8_unicode_ci NOT NULL,
+                `service` VARCHAR(20) NOT NULL,
+        		`token` TEXT NOT NULL,
         		PRIMARY KEY (`user_id`,`service`)
         		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1";
 
 		return $sql;
-	}
+	}*/
 
     public function RegisterProvider($provider)
     {
@@ -99,8 +101,11 @@ class OAuth2 extends ComponentBase
             $this->accountManager->CreateAccount(null, null, $email);
         }
 
-        $sql = "INSERT INTO `{$db_prefix}oauth_user_tokens` (user_id, service, token) VALUES(:user_id, :service, :token)";
-        $this->db->ExecuteNonQuery($sql, array('user_id'=>$user->GetId(), ':token'=>$token, ':service'=>$provider->GetName()));
+        $oauth_user_data = new OAuthUserData($user->GetId(), $provider->GetName(), $token);
+        $this->db->InsertNewItem($oauth_user_data);
+
+        //$sql = "INSERT INTO `{$db_prefix}oauth_user_tokens` (user_id, service, token) VALUES(:user_id, :service, :token)";
+        //$this->db->ExecuteNonQuery($sql, array('user_id'=>$user->GetId(), ':token'=>$token, ':service'=>$provider->GetName()));
 
         return $user;
     }
