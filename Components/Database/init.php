@@ -103,7 +103,7 @@ class Database extends ComponentBase {
             }
             else
             {
-                $type = 'NVARCHAR['.$parts[1].']';
+                $type = 'NVARCHAR('.$parts[1].')';
             }
         }
 
@@ -122,7 +122,7 @@ class Database extends ComponentBase {
         return '';
     }
 
-    private function createGetterCreateFieldSQL($method, $primary_keys, $unique_indices) {
+    private function createGetterCreateFieldSQL($method, &$primary_keys, &$unique_indices) {
         $comment = $method->getDocComment();
         if (preg_match('/@return\s+(?P<type>[\w\[\]\:]+)/', $comment, $matches) === 0) {
             return null;
@@ -133,15 +133,15 @@ class Database extends ComponentBase {
 
         $mandatory = '';
         $default = '';
-        if (preg_match('/@mandatory\b/', $comment, $matches) > 0) {
+        if (preg_match('/@mandatory\b/', $comment) > 0) {
             $mandatory = 'NOT NULL';
         }
 
-        if (preg_match('/@primary-key\b/', $comment, $matches) > 0) {
+        if (preg_match('/@primary-key\b/', $comment) > 0) {
             $primary_keys[] = $field_name;
         }
 
-        if (preg_match('/@unique-index\b/', $comment, $matches) > 0) {
+        if (preg_match('/@unique-index\b/', $comment) > 0) {
             $unique_indices[] = $field_name;
         }
 
