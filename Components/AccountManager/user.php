@@ -24,6 +24,7 @@ class User{
     * @return int
     * @mandatory
     * @primary-key
+    * @deafult AUTO-INCREMENT
     */
     public function GetId() { return $this->user_id; }
 

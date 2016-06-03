@@ -110,18 +110,31 @@ class Database extends ComponentBase {
         return $type;
     }
 
+    private function convertDefault($default_value){
+        self::getLogger()->log_info("convertDefault - value: $default_value");
+        if ($default_value == 'NOW') {
+            return 'DEFAULT CURRENT_TIMESTAMP';
+        }
+        else if ($default_value == 'AUTO-INCREMENT') {
+            return 'AUTO_INCREMENT';
+        }
+
+        return '';
+    }
+
     private function createGetterCreateFieldSQL($method, $primary_keys, $unique_indices) {
         $comment = $method->getDocComment();
         if (preg_match('/@return\s+(?P<type>[\w\[\]\:]+)/', $comment, $matches) === 0) {
-            continue;
+            return null;
         }
 
         $field_type = $this->convertType($matches['type']);
-        $field_name = substr($method_name, 3);
+        $field_name = substr($method->name, 3);
 
         $mandatory = '';
+        $default = '';
         if (preg_match('/@mandatory\b/', $comment, $matches) > 0) {
-            $mandatory = 'NOT NULL'
+            $mandatory = 'NOT NULL';
         }
 
         if (preg_match('/@primary-key\b/', $comment, $matches) > 0) {
@@ -132,13 +145,17 @@ class Database extends ComponentBase {
             $unique_indices[] = $field_name;
         }
 
-        $sql .= "`{$field_name}` {$field_type} {$mandatory}";
+        if (preg_match('/@default\s+(?P<value>.+)/', $comment, $matches) > 0) {
+            $default = $this->convertDefault($matches['value']);
+        }
+
+        $sql = "`{$field_name}` {$field_type} {$mandatory} {$default}";
 
         return $sql;
     }
 
     private function getPublicGetters($object){
-        $reflector = new ReflectionClass($typename);
+        $reflector = new ReflectionClass($object);
         $class_methods = $reflector->getMethods(ReflectionMethod::IS_PUBLIC);
         $methods = array();
         foreach ($class_methods as $method) {
@@ -155,13 +172,15 @@ class Database extends ComponentBase {
     {
         $getters = $this->getPublicGetters($typename);
 
-        $sql = "CREATE TABLE IF NOT EXISTS `{$this->prefix}{$typename}` ("
+        $sql = "CREATE TABLE IF NOT EXISTS `{$this->prefix}{$typename}` (";
         $primary_keys = array();
         $unique_indices = array();
         $statements = array();
         foreach ($getters as $getter) {
             $method_sql = $this->createGetterCreateFieldSQL($getter, $primary_keys, $unique_indices);
-            $statements[] = $method_sql;
+            if ($method_sql !== null) {
+                $statements[] = $method_sql;
+            }
         }
 
         if (count($primary_keys) > 0) {
@@ -172,10 +191,11 @@ class Database extends ComponentBase {
             $statements[]  = "UNIQUE INDEX `{$unique_index}_UNIQUE` (`{$unique_index}` ASC)";
         }
 
-        $sql .= implode(',', $statements);
+        $sql .= "\n" . implode(",\n", $statements) . "\n";
 
         $sql .= ') ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1';
 
+        self::getLogger()->log_info("CreateTable - sql: \n$sql");
         $stmt = $this->dbh->exec($sql);
     }
 
