@@ -28,6 +28,12 @@ class User{
     */
     private $username;
 
+    /**
+    * roles
+    * @persist
+    * @type Role
+    * @multiplicity Many-to-Many
+    */
     private $roles;
 
     /**
