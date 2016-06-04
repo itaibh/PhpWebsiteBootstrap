@@ -122,14 +122,19 @@ class Database extends ComponentBase {
         return '';
     }
 
-    private function createGetterCreateFieldSQL($method, &$primary_keys, &$unique_indices) {
-        $comment = $method->getDocComment();
-        if (preg_match('/@return\s+(?P<type>[\w\[\]\:]+)/', $comment, $matches) === 0) {
+    private function createSqlStatementForProperty($property, &$primary_keys, &$unique_indices) {
+        $comment = $property->getDocComment();
+
+        if (preg_match('/@persist\b/', $comment) === 0) {
+            return null;
+        }
+
+        if (preg_match('/@type\s+(?P<type>[\w\[\]\:]+)/', $comment, $matches) === 0) {
             return null;
         }
 
         $field_type = $this->convertType($matches['type']);
-        $field_name = substr($method->name, 3);
+        $field_name = $property->name;
 
         $mandatory = '';
         $default = '';
@@ -154,30 +159,17 @@ class Database extends ComponentBase {
         return $sql;
     }
 
-    private function getPublicGetters($object){
-        $reflector = new ReflectionClass($object);
-        $class_methods = $reflector->getMethods(ReflectionMethod::IS_PUBLIC);
-        $methods = array();
-        foreach ($class_methods as $method) {
-            if (substr_compare($method->name, 'Get', 0, 3) === 0)
-            {
-                $methods[] = $method;
-            }
-        }
-
-        return $methods;
-    }
-
     public function CreateTable($typename)
     {
-        $getters = $this->getPublicGetters($typename);
+        $reflector = new ReflectionClass($typename);
+        $properties = $reflector->getProperties();
 
         $sql = "CREATE TABLE IF NOT EXISTS `{$this->prefix}{$typename}` (";
         $primary_keys = array();
         $unique_indices = array();
         $statements = array();
-        foreach ($getters as $getter) {
-            $method_sql = $this->createGetterCreateFieldSQL($getter, $primary_keys, $unique_indices);
+        foreach ($properties as $property) {
+            $method_sql = $this->createSqlStatementForProperty($property, $primary_keys, $unique_indices);
             if ($method_sql !== null) {
                 $statements[] = $method_sql;
             }

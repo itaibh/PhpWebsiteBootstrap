@@ -2,8 +2,30 @@
 
 class OAuthUserData {
 
+    /**
+    * user_id
+    * @persist
+    * @type int
+    * @mandatory
+    * @primary-key
+    */
     private $user_id;
+
+    /**
+    * service
+    * @persist
+    * @type string:20
+    * @mandatory
+    * @primary-key
+    */
     private $service;
+
+    /**
+    * token
+    * @persist
+    * @type string
+    * @mandatory
+    */
     private $token;
 
     public function __construct ($user_id, $service, $token)
@@ -13,28 +35,8 @@ class OAuthUserData {
         $this->token = $token;
     }
 
-    /**
-    * GetUserId
-    * @return int
-    * @mandatory
-    * @primary-key
-    */
     public function GetUserId() { return $this->user_id; }
-
-
-    /**
-    * GetService
-    * @return string:20
-    * @mandatory
-    * @primary-key
-    */
     public function GetService() { return $this->service; }
-
-    /**
-    * GetToken
-    * @return string
-    * @mandatory
-    */
     public function GetToken() { return $this->token; }
 
 }

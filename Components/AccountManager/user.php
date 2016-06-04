@@ -2,14 +2,62 @@
 
 class User{
 
+    /**
+    * user_id
+    * @persist
+    * @type int
+    * @mandatory
+    * @primary-key
+    * @default AUTO-INCREMENT
+    */
     private $user_id;
+
+    /**
+    * email
+    * @persist
+    * @type string:100
+    * @unique-index
+    */
     private $email;
+
+    /**
+    * username
+    * @persist
+    * @type string:100
+    * @unique-index
+    */
     private $username;
+
     private $roles;
 
+    /**
+    * password_hash
+    * @persist
+    * @type string:128
+    */
     private $password_hash;
+
+    /**
+    * password_salt
+    * @persist
+    * @type string:128
+    */
     private $password_salt;
+
+    /**
+    * creation_date
+    * @persist
+    * @type TIMESTAMP
+    * @mandatory
+    * @default NOW
+    */
     private $creation_date;
+
+    /**
+    * last_login
+    * @persist
+    * @type @TIMESTAMP
+    */
     private $last_login;
 
 	public function __construct($user_id, $username, $email)
@@ -19,53 +67,12 @@ class User{
         $this->email = $email;
     }
 
-    /**
-    * GetId
-    * @return int
-    * @mandatory
-    * @primary-key
-    * @default AUTO-INCREMENT
-    */
     public function GetId() { return $this->user_id; }
-
-    /**
-    * GetUsername
-    * @return string:100
-    * @unique-index
-    */
     public function GetUsername() { return $this->username; }
-
-    /**
-    * GetEmail
-    * @return string:100
-    * @unique-index
-    */
     public function GetEmail() { return $this->email; }
-
-    /**
-    * GetPasswordHash
-    * @return string:128
-    */
     public function GetPasswordHash() { return $this->password_hash; }
-
-    /**
-    * GetPasswordSalt
-    * @return string:128
-    */
     public function GetPasswordSalt() { return $this->password_salt; }
-
-    /**
-    * GetCreationDate
-    * @return TIMESTAMP
-    * @mandatory
-    * @default NOW
-    */
     public function GetCreationDate() { return $this->creation_date; }
-
-    /**
-    * GetLastLogin
-    * @return @TIMESTAMP
-    */
     public function GetLastLogin() { return $this->last_login; }
 
 }
