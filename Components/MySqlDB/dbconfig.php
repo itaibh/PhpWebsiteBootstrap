@@ -2,7 +2,7 @@
 
 function getDbSettings()
 {
-    if ($_SERVER['HTTP_HOST']=='127.0.0.1' || $_SERVER['HTTP_HOST']=='localhost' || $_SERVER['HTTP_HOST']=='10.0.0.1')
+    if ($_SERVER['SERVER_NAME']=='127.0.0.1' || $_SERVER['SERVER_NAME']=='localhost' || $_SERVER['SERVER_NAME']=='10.0.0.1')
     {
         return [
             "db_host" => "localhost:3306", //MySQL55

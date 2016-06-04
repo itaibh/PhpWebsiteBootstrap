@@ -16,7 +16,7 @@ class OAuth2 extends ComponentBase
 
     public function Init()
     {
-        $this->db = ComponentsManager::Instance()->GetComponent('Database');
+        $this->db = ComponentsManager::Instance()->GetComponent('MySqlDB');
         $this->accountManager = ComponentsManager::Instance()->GetComponent('AccountManager');
 
         self::getLogger()->log_info("creating oauth-users tokens table");

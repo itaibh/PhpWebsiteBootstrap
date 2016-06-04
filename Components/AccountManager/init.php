@@ -13,7 +13,7 @@ class AccountManager extends ComponentBase {
 
     public function Init()
     {
-        $this->db = ComponentsManager::Instance()->GetComponent('Database');
+        $this->db = ComponentsManager::Instance()->GetComponent('MySqlDB');
 
         self::getLogger()->log_info("creating roles table");
         $this->db->CreateTable('Role');

@@ -78,7 +78,7 @@ class ComponentsManager {
 
     public function Init()
     {
-        $this->RegisterComponents(['Database','AccountManager','OAuth2']);
+        $this->RegisterComponents(['MySqlDB','AccountManager','OAuth2']);
     }
 
     private static function getLogger() {
