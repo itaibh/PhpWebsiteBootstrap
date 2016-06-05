@@ -73,6 +73,14 @@ class User{
         $this->email = $email;
     }
 
+    public function __construct($username, $email, $password_hash, $password_salt)
+	{
+        $this->username = $username;
+        $this->email = $email;
+        $this->password_hash = $password_hash;
+        $this->password_salt = $password_salt;
+    }
+
     public function GetId() { return $this->user_id; }
     public function GetUsername() { return $this->username; }
     public function GetEmail() { return $this->email; }

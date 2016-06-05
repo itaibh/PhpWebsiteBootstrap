@@ -102,41 +102,33 @@ class GoogleOAuthProvider implements IOAuthProvider
     {
         $idTokenJson = $this->extractOAuthDataFromRequest();
 
-        //$dbh = get_db();
-        //$db_prefix = constant('db_prefix');
-        //$stmt = $dbh->prepare("SELECT * FROM `{$db_prefix}Users` AS Users WHERE Users.`Google ID Token` = ?");
-        //$stmt->execute(array($idTokenJson->sub));
-        //$row = $stmt->fetch();
-
-        if ($row == null)
+        // TODO - 1. find user in DB by google oauth user token.
+        // TODO - 2. if no user found:
+        // TODO - 2.1. check if user exists in DB by its email (don't forget to check if it is verified)
+        // TODO - 2.2. if user found:
+        // TODO - 2.2.1. insert oauth data that matches the user.
+        // TODO - 2.3. else:
+        // TODO - 2.3.1. insert a new user with no username and no password to DB.
+        // TODO - 2.3.2. insert oauth data that matches the user.
+        // TODO - 3. else:
+        // TODO - 3.1. load the user (?)
+        /*if ($row == null)
         {
             if (isset($idTokenJson->email) && $idTokenJson->email_verified === true)
             {
-                //$user = User::QueryByEmail($idTokenJson->email);
-                //$stmt = $dbh->prepare("UPDATE `{$db_prefix}Users` SET `Google ID Token`=? WHERE `User Email`=?");
-                //$stmt->execute(array($idTokenJson->sub, $idTokenJson->email));
                 if ($stmt->rowCount() == 0)
                 {
                     $apiKey = $this->api_key;
                     $handle = fopen("https://www.googleapis.com/plus/v1/people/{$idTokenJson->sub}/openIdConnect?key={$apiKey}", "rb");
                     $contents = stream_get_contents($handle);
                     $personData = json_decode($contents);
-
-                    /*$user = User::CreateOnDB($idTokenJson->email,
-                                     $personData->given_name,
-                                     $personData->family_name,
-                                     $personData->name,
-                                     str_replace('sz=50','sz=32', $personData->picture),
-                                     str_replace('sz=50','sz=128',$personData->picture),
-                                     $idTokenJson->sub);
-                    */
                 }
             }
         }
         else
         {
-            $user = User::CreateFromMapArray($row);
-        }
+            //$user = User::CreateFromMapArray($row);
+        }*/
 
         $state = $_GET['state'];
         parse_str($state, $stateArgs);

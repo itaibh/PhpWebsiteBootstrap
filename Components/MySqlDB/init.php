@@ -173,7 +173,17 @@ class MySqlDB extends ComponentBase {
         }
         $primary_key_names = array_map(function($item) { return $item->name; }, $primary_keys);
         $statements[] = 'PRIMARY KEY (`' . implode('`,`', $primary_key_names) . '`)';
-        //
+
+        // TODO - add references:
+        /*
+        FOREIGN KEY (product_category, product_id)
+            REFERENCES product(category, id)
+            ON UPDATE CASCADE ON DELETE RESTRICT,
+
+        FOREIGN KEY (customer_id)
+            REFERENCES customer(id)
+        */
+
         $sql .= "\n" . implode(",\n", $statements) . "\n";
 
         $sql .= ') ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1';
@@ -275,29 +285,67 @@ class MySqlDB extends ComponentBase {
         $stmt = $this->dbh->exec($sql);
     }
 
-    public function InsertNewItem($item)
+    private function getItemInsertionData($item)
     {
         $typename = get_class($item);
         $reflector = new ReflectionClass($typename);
-        $properties = array_filter($reflector->getProperties(), array($this, 'isPropertyPersistent'));
-
-        $names = array_map(function($item) { return $item->name; }, $properties);
-
-        $sql = "INSERT INTO `{$this->prefix}$typename` (`';
-        $sql .= implode('`,`', $names);
-        $sql .= ') VALUES(:';
-        $sql .= implode(',:', $names);
-        $sql .= ')";
-
-        $stmt = $this->dbh->prepare($sql);
+        $properties = $reflector->getProperties();
 
         $parameters = array();
         foreach ($property as $properties) {
+            $comment = $property->getDocComment();
+            if (preg_match('/@persist\b/', $comment) == 0) {
+                continue;
+            }
+
             $value = $property->getValue($item);
-            $parameters[':' . substr($item->name, 3)] = $value;
+            if ($value !== null) {
+                if (preg_match('/@multiplicity\s+(?P<multiplicity>\S+)/', $comment, $matches) > 0) {
+                    if ($matches['multiplicity'] == 'Many-to-Many') {
+                        continue; // TODO - handle foreign keys on insertion
+                    } else if ($matches['multiplicity'] == 'One-to-Many') {
+                        continue; // TODO - handle foreign keys on insertion
+                    }
+                }
+                $parameters[':' . $item->name] = $value;
+            }
+        }
+        return $parameters;
+    }
+
+    public function InsertNewItem($item)
+    {
+        $parameters = $this->getItemInsertionData($item);
+
+        $names = array();
+        foreach ($parameters as $key => $value) {
+            $names[] = $key.substr(1);
         }
 
+        $sql = "INSERT INTO `{$this->prefix}$typename` (`";
+        $sql .= implode('`,`', $names);
+        $sql .= ') VALUES(:';
+        $sql .= implode(',:', $names);
+        $sql .= ')';
+
+        self::getLogger()->log_info("InsertNewItem - sql: \n$sql");
+
+        $stmt = $this->dbh->prepare($sql);
         $stmt->execute($parameters);
+    }
+
+    public function FindFirst($typename, $parameters)
+    {
+        //TODO - build SQL correctly.
+        $sql = "SELECT TOP 1 * FROM {$this->prefix}users WHERE username = :username";
+        $stmt = $this->dbh->prepare($sql);
+
+        //TODO - build $params correctly.
+        $stmt->execute($params);
+        $row = $stmt->fetch();
+
+        //TODO - create the return value correctly.
+        return null;
     }
 }
 

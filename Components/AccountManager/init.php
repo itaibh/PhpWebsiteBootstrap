@@ -20,77 +20,11 @@ class AccountManager extends ComponentBase {
 
         self::getLogger()->log_info("creating users table");
         $this->db->CreateTable('User');
-
-        /*self::getLogger()->log_info("creating user-roles table");
-        $this->db->ExecuteNonQuery(self::getCreateUserRolesTableSQL($this->db->prefix));
-
-        self::getLogger()->log_info("creating user-tokens table");
-        $this->db->ExecuteNonQuery(self::getCreateUserTokensTableSQL($this->db->prefix));*/
     }
-
-    /*private static function getCreateUsersTableSQL($db_prefix)
-	{
-		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}users` (
-                `user_id` INT NOT NULL AUTO_INCREMENT,
-        		`username` VARCHAR(100) NULL,
-        		`email` VARCHAR(100) NOT NULL,
-        		`password_hash` VARCHAR(128) NULL ,
-                `password_salt` VARCHAR(128) NULL ,
-                `creation_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        		`last_login` TIMESTAMP NULL ,
-                `status` TINYINT(1) NOT NULL DEFAULT 0,
-        		PRIMARY KEY (`user_id`) ,
-                UNIQUE INDEX `username_UNIQUE` (`username` ASC),
-                UNIQUE INDEX `email_UNIQUE` (`email` ASC)
-        		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1";
-
-		return $sql;
-	}*/
-
-    /*private static function getCreateRolesTableSQL($db_prefix)
-	{
-	    $sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}roles` (
-                `role_id` INT NOT NULL AUTO_INCREMENT ,
-        		`role_name` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
-        		PRIMARY KEY (`role_id`) ,
-                UNIQUE INDEX `role_name` (`role_name` ASC)
-        		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1";
-
-		return $sql;
-	}*/
-
-
-/*
-    private static function getCreateUserRolesTableSQL($db_prefix)
-	{
-		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_roles` (
-                `user_id` INT NOT NULL,
-                `role_id` INT NOT NULL,
-        		PRIMARY KEY (`role_id`, `user_id`)
-        		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1";
-
-		return $sql;
-	}
-
-    private static function getCreateUserTokensTableSQL($db_prefix)
-	{
-		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}user_tokens` (
-                `user_id` INT NOT NULL,
-                `token` VARCHAR(100) NOT NULL,
-                `purpose` VARCHAR(100) NOT NULL,
-                `creation_date` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-        		PRIMARY KEY (`user_id`)
-        		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1";
-
-		return $sql;
-	}
-*/
 
     public function CreateAccount($username, $password, $email)
     {
         $this->validateAccountUniqueness($username, $email);
-
-        $db_prefix = $this->db->prefix;
 
         if ($password != null)
         {
@@ -103,14 +37,8 @@ class AccountManager extends ComponentBase {
             $password_hash = null;
         }
 
-        $sql = "INSERT INTO {$db_prefix}users (username, password_hash, password_salt, email)
-                VALUES (:username, :password, :salt, :email)";
-
-        $this->db->ExecuteNonQuery($sql,
-                array(':username'=>$username,
-                    ':password'=>$password_hash,
-                    ':salt'=>$salt,
-                    ':email'=>$email));
+        $new_user = new User($username, $email, $password_hash, $salt);
+        $this->db->InsertNewItem($new_user);
     }
 
     private function validateAccountUniqueness($username, $email)
@@ -119,9 +47,10 @@ class AccountManager extends ComponentBase {
 
         if ($username != null)
         {
-            $sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE username = :username";
-            $row = $this->db->QuerySingleRow($sql, array(':username'=>$username));
-            if ($row){
+            $user = $this->db->FindFirst('User', array('username'=>$username));
+            /*$sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE username = :username";
+            $row = $this->db->QuerySingleRow($sql, array(':username'=>$username));*/
+            if ($user){
                 throw new Exception("Username already in use");
             }
         }
