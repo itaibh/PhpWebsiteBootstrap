@@ -139,7 +139,6 @@ class MySqlDB extends ComponentBase {
 
     private function getPropertyFieldType($property) {
         $comment = $property->getDocComment();
-        echo "<pre>$comment</pre>";
         if (preg_match('/@type\s+(?P<type>\w+)(\:(?<length>\d+))?/', $comment, $matches) === 0) {
             return null;
         }
@@ -169,7 +168,7 @@ class MySqlDB extends ComponentBase {
         }
         $statements = array();
         foreach ($primary_keys as $primary_key) {
-            $field_type = $this->getPropertyFieldType($property);
+            $field_type = $this->getPropertyFieldType($primary_key);
             $statements[] = "`{$primary_key->name}` {$field_type} NOT NULL";
         }
         $primary_key_names = array_map(function($item) { return $item->name; }, $primary_keys);
