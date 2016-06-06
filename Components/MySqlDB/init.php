@@ -337,10 +337,21 @@ class MySqlDB extends ComponentBase {
     public function FindFirst($typename, $parameters)
     {
         //TODO - build SQL correctly.
-        $sql = "SELECT TOP 1 * FROM {$this->prefix}users WHERE username = :username";
+        $sql = "SELECT TOP 1 * FROM {$this->prefix}$typename WHERE ";
+
+        $statements = array();
+        $params = array();
+        foreach ($parameters as $key => $value) {
+            $statements[] = "$key = :$key";
+            $params[":$key"] = $value;
+        }
+
+        $sql .= implode(' AND ', $statements);
+
+        self::getLogger()->log_info("FindFirst - sql: \n$sql");
+
         $stmt = $this->dbh->prepare($sql);
 
-        //TODO - build $params correctly.
         $stmt->execute($params);
         $row = $stmt->fetch();
 

@@ -66,19 +66,25 @@ class User{
     */
     private $last_login;
 
-	public function __construct($user_id, $username, $email)
+    private function __construct() { }
+
+	public static function CreateWithId($user_id, $username, $email)
 	{
-        $this->user_id = $user_id;
-        $this->username = $username;
-        $this->email = $email;
+        $user = new User();
+        $user->user_id = $user_id;
+        $user->username = $username;
+        $user->email = $email;
+        return $user;
     }
 
-    public function __construct($username, $email, $password_hash, $password_salt)
+    public static function CreateWithPasswordData($username, $email, $password_hash, $password_salt)
 	{
-        $this->username = $username;
-        $this->email = $email;
-        $this->password_hash = $password_hash;
-        $this->password_salt = $password_salt;
+        $user = new User();
+        $user->username = $username;
+        $user->email = $email;
+        $user->password_hash = $password_hash;
+        $user->password_salt = $password_salt;
+        return $user;
     }
 
     public function GetId() { return $this->user_id; }

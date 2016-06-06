@@ -19,15 +19,21 @@
         */
         private $role_name;
 
-        public function __construct($role_id, $role_name)
+        private function __construct() { }
+
+        public static function CreateWithId($role_id, $role_name)
         {
-            $this->role_id = $role_id;
-            $this->role_name = $role_name;
+            $role = new Role();
+            $role->role_id = $role_id;
+            $role->role_name = $role_name;
+            return $role;
         }
-        
-        public function __construct($role_name)
+
+        public function Create($role_name)
         {
-            $this->role_name = $role_name;
+            $role = new Role();
+            $role->role_name = $role_name;
+            return $role;
         }
 
         public function GetRoleId() { return $this->role_id; }

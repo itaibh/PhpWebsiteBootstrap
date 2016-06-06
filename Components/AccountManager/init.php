@@ -37,7 +37,7 @@ class AccountManager extends ComponentBase {
             $password_hash = null;
         }
 
-        $new_user = new User($username, $email, $password_hash, $salt);
+        $new_user = User::CreateWithPasswordData($username, $email, $password_hash, $salt);
         $this->db->InsertNewItem($new_user);
     }
 
@@ -56,7 +56,7 @@ class AccountManager extends ComponentBase {
 
     public function CreateRole($role_name)
     {
-        $new_role = new Role($role_name);
+        $new_role = Role::Create($role_name);
         $this->db->InsertNewItem($new_role);
     }
 
@@ -156,6 +156,21 @@ class AccountManager extends ComponentBase {
         $secondsDiff = (int)($date2-$date1);
 
         return ($secondsDiff < 15*60);
+    }
+
+    public function TryHandleRequest()
+    {
+        $reqUri = $_SERVER['REQUEST_URI'];
+        $reqUriParts =  explode('?', $reqUri);
+        $requestURI = explode('/', $reqUriParts[0]);
+
+        if ($requestURI[1] != 'login')
+        {
+            return false;
+        }
+
+        include ('/Components/LoginWidget/login.php');
+        return true;
     }
 }
 
