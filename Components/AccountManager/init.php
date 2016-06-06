@@ -48,34 +48,26 @@ class AccountManager extends ComponentBase {
         if ($username != null)
         {
             $user = $this->db->FindFirst('User', array('username'=>$username));
-            /*$sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE username = :username";
-            $row = $this->db->QuerySingleRow($sql, array(':username'=>$username));*/
             if ($user){
                 throw new Exception("Username already in use");
             }
-        }
-
-        $sql = "SELECT TOP 1 1 FROM {$db_prefix}users WHERE email = :email";
-        $row = $db->QuerySingleRow($sql, array(':email'=>$email));
-        if ($row){
-            throw new Exception("Email already in use");
         }
     }
 
     public function CreateRole($role_name)
     {
-        $db_prefix = $this->db->prefix;
-        $sql = "INSERT INTO {$db_prefix}roles (role_name) VALUES (:role)";
-        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_name));
+        $new_role = new Role($role_name);
+        $this->db->InsertNewItem($new_role);
     }
 
     public function DeleteRole($role_name)
     {
-        $db_prefix = $this->db->prefix;
-        $sql = "DELETE FROM {$db_prefix}roles WHERE role_name = :role";
-        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_name));
+        $role = $this->db->FindFirst('Role', array('role_name'=>$role_name));
+        if ($role){
+            $this->db->DeleteItem($role);
+        }
     }
-
+/*
     public function RenameRole($current_role_name, $new_role_name)
     {
         $db_prefix = $this->db->prefix;
@@ -102,51 +94,40 @@ class AccountManager extends ComponentBase {
         $sql = "DELETE FROM {$db_prefix}user_roles WHERE role_id = :role AND user_id = :user";
         $this->db->ExecuteNonQuery($sql, array(':role'=>$role_id, ':user'=>$user_id));
     }
-
+*/
     private function validateRoleExistance($role_name)
     {
-        $db_prefix = $this->db->prefix;
-        $sql = "SELECT TOP 1 role_id FROM {$db_prefix}roles WHERE role_name = :role";
-        $row = $this->db->QuerySingleRow($sql, array(':role'=>$role_name));
-        if (!$row){
+        $role = $this->db->FindFirst('Role', array('role_name'=>$role_name));
+        if (!$role) {
             throw new Exception("No role found by that name");
         }
 
-        return $row['role_id'];
+        return $role;
     }
 
     public function GetUserByEmail($email)
     {
-        $db_prefix = $this->db->prefix;
-        $sql = "SELECT TOP 1 user_id FROM {$db_prefix}users WHERE email = :email";
-        $row = $this->db->QuerySingleRow($sql, array(':email'=>$email));
-        if (!$row) {
-            return null;
-        }
-
-        return $this->createUserFromUserDbRow($row);
+        $user = $this->db->FindFirst('User', array('email'=>$email));
+        return $user;
     }
 
     private function validateUserExistance($username)
     {
-        $db_prefix = $this->db->prefix;
-        $sql = "SELECT TOP 1 user_id FROM {$db_prefix}users WHERE username = :username";
-        $row = $this->db->QuerySingleRow($sql, array(':username'=>$username));
-        if (!$row){
+        $user = $this->db->FindFirst('User', array('username'=>$username));
+        if (!$user){
             throw new Exception("No user found with that username");
         }
 
-        return $row;
+        return $user;
     }
 
     public function ValidateAccount($username, $password)
     {
-        $user_row = validateUserExistance($username);
-        $salt = $user_row['password_salt'];
+        $user = validateUserExistance($username);
+        $salt = $user->GetPasswordSalt();
         $password_hash = hash('sha256', $password . $salt);
 
-        if ($password_hash == $user['password_hash']) {
-            $user = $this->createUserFromUserDbRow($user_row);
+        if ($password_hash == $user->GetPasswordHash()) {
             return $user;
         }
 
@@ -155,46 +136,26 @@ class AccountManager extends ComponentBase {
 
     public function GenerateToken($username, $purpose)
     {
-        $user_row = validateUserExistance($username);
-        $token = bin2hex(random_bytes($length));
+        $user = validateUserExistance($username);
+        $token_data = bin2hex(random_bytes($length));
 
-        $db_prefix = $this->db->prefix;
-
-        $sql = "INSERT INTO {$db_prefix}user_tokens (user_id, token, purpose)
-                VALUES (:user, :token, :purpose)";
-
-        $this->db->ExecuteNonQuery($sql,
-                        array(':user'=>$user_row['user_id'],
-                            ':token'=>$token,
-                            ':purpose'=>$purpose));
+        $token = new Token($user, $purpose, $token_data);
+        $this->db->InsertNewItem($token);
 
         return $token;
     }
 
     public function ValidateToken($username, $purpose, $token)
     {
-        $user_row = validateUserExistance($username);
-        $sql = "SELECT FROM {$db_prefix}user_tokens
-                WHERE user_id = :user AND purpose = :purpose AND token = :token";
+        $user = validateUserExistance($username);
+        $token = $this->db->FindFirst('Token', array('user'=>$user, 'token'=>$token, 'purpose'=>$purpose));
+        if (!$token) return false;
 
-        $row = $this->db->QuerySingleRow($sql,
-                        array(':user'=>$user_row['user_id'],
-                            ':token'=>$token,
-                            ':purpose'=>$purpose));
-
-        if (!$row) return false;
-
-        $date1 = $row['creation_date'];
+        $date1 = $token->GetCreationDate();
         $date2 = date();
         $secondsDiff = (int)($date2-$date1);
 
         return ($secondsDiff < 15*60);
-    }
-
-    private function createUserFromUserDbRow($row)
-    {
-        $user = new User($row['user_id'], $row['username'], $row['email']);
-        return $user;
     }
 }
 

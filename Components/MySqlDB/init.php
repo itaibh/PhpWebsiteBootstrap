@@ -347,6 +347,13 @@ class MySqlDB extends ComponentBase {
         //TODO - create the return value correctly.
         return null;
     }
+
+    public function DeleteItem($item) {
+        //TODO - build SQL correctly - get primary keys and use them as parameters.
+        $sql = "DELETE FROM {$this->prefix}roles WHERE role_name = :role";
+        $this->db->ExecuteNonQuery($sql, array(':role'=>$role_name));
+    }
+
 }
 
 ?>
