@@ -354,10 +354,9 @@ class MySqlDB extends ComponentBase {
         $stmt = $this->dbh->prepare($sql);
 
         $stmt->execute($params);
-        $row = $stmt->fetch();
+        $item = $stmt->fetchObject($typename);
 
-        //TODO - create the return value correctly.
-        return null;
+        return $item;
     }
 
     public function DeleteItem($item) {
