@@ -281,7 +281,7 @@ class MySqlDB extends ComponentBase {
 
         $sql .= ') ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1';
 
-        self::getLogger()->log_info("CreateTable - sql: \n$sql");
+        //self::getLogger()->log_info("CreateTable - sql: \n$sql");
         $stmt = $this->dbh->exec($sql);
     }
 
@@ -337,7 +337,7 @@ class MySqlDB extends ComponentBase {
     public function FindFirst($typename, $parameters)
     {
         //TODO - build SQL correctly.
-        $sql = "SELECT TOP 1 * FROM {$this->prefix}$typename WHERE ";
+        $sql = "SELECT * FROM {$this->prefix}$typename WHERE ";
 
         $statements = array();
         $params = array();
@@ -346,9 +346,10 @@ class MySqlDB extends ComponentBase {
             $params[":$key"] = $value;
         }
 
-        $sql .= implode(' AND ', $statements);
+        $sql .= implode(' AND ', $statements) . ' LIMIT 1';
 
         self::getLogger()->log_info("FindFirst - sql: \n$sql");
+        self::getLogger()->log_info("FindFirst - params: \n" . var_export($params, true));
 
         $stmt = $this->dbh->prepare($sql);
 

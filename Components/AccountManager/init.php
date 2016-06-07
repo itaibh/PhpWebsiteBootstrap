@@ -1,9 +1,10 @@
 <?php
 require_once __DIR__.'/../componentsmanager.php';
+require_once __DIR__.'/iaccountmanager.php';
 require_once __DIR__.'/user.php';
 require_once __DIR__.'/role.php';
 
-class AccountManager extends ComponentBase {
+class AccountManager extends ComponentBase implements IAccountManager {
 
     private $db;
 
@@ -78,7 +79,7 @@ class AccountManager extends ComponentBase {
     public function AddUserRole($username, $role_name)
     {
         $role_id = validateRoleExistance($role_name);
-        $user = validateUserExistance($username);
+        $user = $this->validateUserExistance($username);
         $user_id = $user['user_id'];
         $db_prefix = $this->db->prefix;
         $sql = "INSERT INTO {$db_prefix}user_roles (role_id, user_id) VALUES (:role, :user)";
@@ -88,7 +89,7 @@ class AccountManager extends ComponentBase {
     public function RemoveUserRole($username, $role)
     {
         $role_id = validateRoleExistance($role_name);
-        $user = validateUserExistance($username);
+        $user = $this->validateUserExistance($username);
         $user_id = $user['user_id'];
         $db_prefix = $this->db->prefix;
         $sql = "DELETE FROM {$db_prefix}user_roles WHERE role_id = :role AND user_id = :user";
@@ -123,20 +124,23 @@ class AccountManager extends ComponentBase {
 
     public function ValidateAccount($username, $password)
     {
-        $user = validateUserExistance($username);
-        $salt = $user->GetPasswordSalt();
-        $password_hash = hash('sha256', $password . $salt);
+        try {
+            $user = $this->validateUserExistance($username);
+            $salt = $user->GetPasswordSalt();
+            $password_hash = hash('sha256', $password . $salt);
 
-        if ($password_hash == $user->GetPasswordHash()) {
-            return $user;
+            if ($password_hash == $user->GetPasswordHash()) {
+                return $user;
+            }
+        } catch (Exception $ex) {
+            return null;
         }
-
         return null;
     }
 
     public function GenerateToken($username, $purpose)
     {
-        $user = validateUserExistance($username);
+        $user = $this->validateUserExistance($username);
         $token_data = bin2hex(random_bytes($length));
 
         $token = new Token($user, $purpose, $token_data);
@@ -147,7 +151,7 @@ class AccountManager extends ComponentBase {
 
     public function ValidateToken($username, $purpose, $token)
     {
-        $user = validateUserExistance($username);
+        $user = $this->validateUserExistance($username);
         $token = $this->db->FindFirst('Token', array('user'=>$user, 'token'=>$token, 'purpose'=>$purpose));
         if (!$token) return false;
 
@@ -164,12 +168,23 @@ class AccountManager extends ComponentBase {
         $reqUriParts =  explode('?', $reqUri);
         $requestURI = explode('/', $reqUriParts[0]);
 
+        self::getLogger()->log_info("TryHandleRequest - " . var_export($requestURI, true));
+
         if ($requestURI[1] != 'login')
         {
             return false;
         }
 
-        include ('/Components/LoginWidget/login.php');
+        //echo '<pre>' . var_export($_SERVER, true) . '</pre>';
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            include (__DIR__.'/../LoginWidget/login.php');
+        } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            //echo '<pre>' . var_export($_POST, true) . '</pre>';
+            $user = $this->ValidateAccount($_POST['username'], $_POST['password']);
+            $isAccountValid = ($user !== null) ? 'true' : 'false';
+            echo "valid account: $isAccountValid<br>";
+            die('Processing login request');
+        }
         return true;
     }
 }

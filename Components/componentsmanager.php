@@ -1,36 +1,5 @@
 <?php
-
-interface IComponent {
-    public function Init();
-    public function TryHandleRequest();
-}
-
-abstract class ComponentBase implements IComponent{
-    public abstract function Init();
-
-    public function TryHandleRequest()
-    {
-        return false;
-    }
-
-    public static function Instance()
-    {
-        static $instance = null;
-        if ($instance === null)
-        {
-            $instance = new static();
-        }
-        return $instance;
-    }
-
-    protected static function getLogger() {
-        static $logger;
-        if ($logger === null) {
-            $logger = new Logger(get_called_class());
-        }
-        return $logger;
-    }
-}
+require_once __DIR__.'/componentbase.php';
 
 class ComponentContainer {
     private static function getLogger() {
