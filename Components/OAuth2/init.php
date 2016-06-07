@@ -4,7 +4,7 @@ require_once __DIR__.'/../Logger/init.php';
 require_once __DIR__.'/ioauthprovider.php';
 require_once __DIR__.'/oauthuserdata.php';
 
-class OAuth2 extends ComponentBase
+class OAuth2 extends ComponentBase implements IOAuth2
 {
     private $providers = array();
     private $db;
@@ -21,20 +21,7 @@ class OAuth2 extends ComponentBase
 
         self::getLogger()->log_info("creating oauth-users tokens table");
         $this->db->CreateTable('OAuthUserData');
-        //$this->db->ExecuteNonQuery(self::GetOAuthUserTokensTableSQL($this->db->prefix));
     }
-
-    /*private static function GetOAuthUserTokensTableSQL($db_prefix)
-	{
-		$sql = "CREATE TABLE IF NOT EXISTS `{$db_prefix}oauth_user_tokens` (
-                `user_id` INT NOT NULL,
-                `service` VARCHAR(20) NOT NULL,
-        		`token` TEXT NOT NULL,
-        		PRIMARY KEY (`user_id`,`service`)
-        		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1";
-
-		return $sql;
-	}*/
 
     public function RegisterProvider($provider)
     {
