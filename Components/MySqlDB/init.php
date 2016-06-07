@@ -292,12 +292,12 @@ class MySqlDB extends ComponentBase {
         $properties = $reflector->getProperties();
 
         $parameters = array();
-        foreach ($property as $properties) {
+        foreach ($properties as $property) {
             $comment = $property->getDocComment();
             if (preg_match('/@persist\b/', $comment) == 0) {
                 continue;
             }
-
+            $property->setAccessible(true);
             $value = $property->getValue($item);
             if ($value !== null) {
                 if (preg_match('/@multiplicity\s+(?P<multiplicity>\S+)/', $comment, $matches) > 0) {
@@ -307,7 +307,7 @@ class MySqlDB extends ComponentBase {
                         continue; // TODO - handle foreign keys on insertion
                     }
                 }
-                $parameters[':' . $item->name] = $value;
+                $parameters[':' . $property->name] = $value;
             }
         }
         return $parameters;
@@ -319,12 +319,12 @@ class MySqlDB extends ComponentBase {
 
         $names = array();
         foreach ($parameters as $key => $value) {
-            $names[] = $key.substr(1);
+            $names[] = substr($key, 1);
         }
-
+        $typename = get_class($item);
         $sql = "INSERT INTO `{$this->prefix}$typename` (`";
         $sql .= implode('`,`', $names);
-        $sql .= ') VALUES(:';
+        $sql .= '`) VALUES(:';
         $sql .= implode(',:', $names);
         $sql .= ')';
 

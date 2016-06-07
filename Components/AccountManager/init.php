@@ -125,14 +125,17 @@ class AccountManager extends ComponentBase implements IAccountManager {
     public function ValidateAccount($username, $password)
     {
         try {
+            self::getLogger()->log_info("ValidateAccount - $username, $password");
             $user = $this->validateUserExistance($username);
             $salt = $user->GetPasswordSalt();
             $password_hash = hash('sha256', $password . $salt);
 
+            self::getLogger()->log_info("hash: $password_hash");
             if ($password_hash == $user->GetPasswordHash()) {
                 return $user;
             }
         } catch (Exception $ex) {
+            self::getLogger()->log_error('ValidateAccount - ' . $ex->getMessage());
             return null;
         }
         return null;
@@ -170,22 +173,42 @@ class AccountManager extends ComponentBase implements IAccountManager {
 
         self::getLogger()->log_info("TryHandleRequest - " . var_export($requestURI, true));
 
-        if ($requestURI[1] != 'login')
+        $action = $requestURI[1];
+        if ($action != 'login' && $action != 'register')
         {
             return false;
         }
+        $method = $_SERVER['REQUEST_METHOD'];
 
-        //echo '<pre>' . var_export($_SERVER, true) . '</pre>';
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            include (__DIR__.'/../LoginWidget/login.php');
-        } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            //echo '<pre>' . var_export($_POST, true) . '</pre>';
-            $user = $this->ValidateAccount($_POST['username'], $_POST['password']);
-            $isAccountValid = ($user !== null) ? 'true' : 'false';
-            echo "valid account: $isAccountValid<br>";
-            die('Processing login request');
+        $function_name = "{$action}_{$method}";
+
+        if(method_exists($this, $function_name))
+        {
+            $this->$function_name();
+            return true;
         }
-        return true;
+
+        return false;
+    }
+
+    private function login_GET(){
+        include (__DIR__.'/../LoginWidget/login.php');
+    }
+
+    private function login_POST(){
+        //echo '<pre>' . var_export($_POST, true) . '</pre>';
+        $user = $this->ValidateAccount($_POST['username'], $_POST['password']);
+        $isAccountValid = ($user !== null) ? 'true' : 'false';
+        echo "valid account: $isAccountValid<br>";
+        die();
+    }
+
+    private function register_POST(){
+        //echo '<pre>' . var_export($_POST, true) . '</pre>';
+        $user = $this->CreateAccount($_POST['username'], $_POST['password'], $_POST['email']);
+        $isAccountValid = ($user !== null) ? 'true' : 'false';
+        echo "valid account: $isAccountValid<br>";
+        die();
     }
 }
 
