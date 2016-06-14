@@ -1,12 +1,12 @@
 <?php
 
 interface IComponent {
-    public function Init();
+    public function Init($init_data);
     public function TryHandleRequest();
 }
 
 abstract class ComponentBase implements IComponent{
-    public abstract function Init();
+    public abstract function Init($init_data);
 
     public function TryHandleRequest()
     {

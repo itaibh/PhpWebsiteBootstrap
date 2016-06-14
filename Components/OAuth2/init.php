@@ -14,13 +14,24 @@ class OAuth2 extends ComponentBase implements IOAuth2
     private function __clone() {}
     private function __wakeup() {}
 
-    public function Init()
+    public function Init($init_data)
     {
-        $this->db = ComponentsManager::Instance()->GetComponent('MySqlDB');
+        $this->db = ComponentsManager::Instance()->GetComponent('IDatabase');
         $this->accountManager = ComponentsManager::Instance()->GetComponent('AccountManager');
 
         self::getLogger()->log_info("creating oauth-users tokens table");
         $this->db->CreateTable('OAuthUserData');
+
+        $this->registerProviders($init_data['Providers']);
+    }
+
+    private registerProviders($providers_config) {
+        foreach ($providers_config as $className => $config) {
+            self::getLogger()->log_info("loading oauth2 provider {$className}");
+            include __DIR__ . "/Providers/{$className}.php";
+            $provider = call_user_func($className. '::CreateFromConfig', $config);
+            $this->RegisterProvider($provider);
+        }
     }
 
     public function RegisterProvider($provider)
@@ -90,9 +101,6 @@ class OAuth2 extends ComponentBase implements IOAuth2
 
         $oauth_user_data = new OAuthUserData($user->GetId(), $provider->GetName(), $token);
         $this->db->InsertNewItem($oauth_user_data);
-
-        //$sql = "INSERT INTO `{$db_prefix}oauth_user_tokens` (user_id, service, token) VALUES(:user_id, :service, :token)";
-        //$this->db->ExecuteNonQuery($sql, array('user_id'=>$user->GetId(), ':token'=>$token, ':service'=>$provider->GetName()));
 
         return $user;
     }

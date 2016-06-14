@@ -1,11 +1,4 @@
 <?php
-
-interface IOAuth2
-{
-    public function RegisterProvider($provider);
-    public function GetProvider($provider_name);
-}
-
 interface IOAuthProvider
 {
     public function GetName();

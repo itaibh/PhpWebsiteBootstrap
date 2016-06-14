@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__.'/../componentsmanager.php';
-require_once __DIR__.'/iaccountmanager.php';
 require_once __DIR__.'/user.php';
 require_once __DIR__.'/role.php';
 
@@ -12,9 +11,9 @@ class AccountManager extends ComponentBase implements IAccountManager {
     private function __clone() {}
     private function __wakeup() {}
 
-    public function Init()
+    public function Init($init_data)
     {
-        $this->db = ComponentsManager::Instance()->GetComponent('MySqlDB');
+        $this->db = ComponentsManager::Instance()->GetComponent('IDatabase');
 
         self::getLogger()->log_info("creating roles table");
         $this->db->CreateTable('Role');

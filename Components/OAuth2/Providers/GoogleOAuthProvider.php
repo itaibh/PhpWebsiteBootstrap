@@ -4,10 +4,18 @@ require_once __DIR__ . '/../ioauthprovider.php';
 
 class GoogleOAuthProvider implements IOAuthProvider
 {
-    public function __construct($client_id, $client_secret, $api_key) {
-        $this->client_id = $client_id;
-        $this->client_secret = $client_secret;
-        $this->api_key = $api_key;
+    private function __construct() { }
+
+    public static function CreateFromConfig($config) {
+        return static::Create($config['ClientId'], $config['ClientSecret'], $config['ApiKey']);
+    }
+
+    public static function Create($client_id, $client_secret, $api_key) {
+        $instance = new static();
+        $instance->client_id = $client_id;
+        $instance->client_secret = $client_secret;
+        $instance->api_key = $api_key;
+        return $instance;
     }
 
     private $discovery_document = null;

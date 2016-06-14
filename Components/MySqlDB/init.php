@@ -3,7 +3,7 @@
 require_once __DIR__.'/../Logger/init.php';
 require_once __DIR__.'/dbconfig.php';
 
-class MySqlDB extends ComponentBase {
+class MySqlDB extends ComponentBase implements IDatabase {
 
     private $dbh;
     private $settings;
@@ -14,14 +14,15 @@ class MySqlDB extends ComponentBase {
     private function __clone() {}
     private function __wakeup() {}
 
-    public function Init()
+    public function Init($init_data)
     {
-        $this->settings = getDbSettings();
+        $this->settings = $init_data;
         $this->prefix = $this->settings['db_prefix'];
         $this->ConnectToDatabase();
     }
 
-    public function ConnectToDatabase(){
+    public function ConnectToDatabase()
+    {
         try
         {
             $this->doConnectToDatabase();
