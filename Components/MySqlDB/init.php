@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__.'/../Logger/init.php';
-require_once __DIR__.'/dbconfig.php';
 
 class MySqlDB extends ComponentBase implements IDatabase {
 

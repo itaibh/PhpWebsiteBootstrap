@@ -5,7 +5,7 @@
     <input type="submit"/>
 </form>
 <?php
-    $oauth2 = ComponentsManager::Instance()->GetComponent('OAuth2');
+    $oauth2 = ComponentsManager::Instance()->GetComponent('IOAuth2');
     $googleOAuthProvider = $oauth2->GetProvider('google');
     $loginWithGoogleUrl = $googleOAuthProvider->GetLoginUrl(null);
 ?>

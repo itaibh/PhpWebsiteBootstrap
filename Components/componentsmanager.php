@@ -12,8 +12,6 @@ class ComponentsManager {
     private $componentsPerCaller = array();
     private $defaultComponents = array();
 
-    private $components = array();
-
     public static function Instance()
     {
         static $instance = null;
@@ -106,14 +104,14 @@ class ComponentsManager {
 
     public function GetComponent($component_name)
     {
-        $container = $this->components[$component_name];
+        $container = $this->defaultComponents[$component_name];
         $container->TryInit();
         return $container->component;
     }
 
     public function HandleRequest()
     {
-        foreach ($this->components as $name => $container)
+        foreach ($this->defaultComponents as $name => $container)
         {
             $container->TryInit();
             if ($container->component->TryHandleRequest())

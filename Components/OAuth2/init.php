@@ -17,7 +17,7 @@ class OAuth2 extends ComponentBase implements IOAuth2
     public function Init($init_data)
     {
         $this->db = ComponentsManager::Instance()->GetComponent('IDatabase');
-        $this->accountManager = ComponentsManager::Instance()->GetComponent('AccountManager');
+        $this->accountManager = ComponentsManager::Instance()->GetComponent('IAccountManager');
 
         self::getLogger()->log_info("creating oauth-users tokens table");
         $this->db->CreateTable('OAuthUserData');
