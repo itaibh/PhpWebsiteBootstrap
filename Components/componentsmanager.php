@@ -27,24 +27,24 @@ class ComponentsManager {
 
     private function isInterfaceDataValid($interface_name, $interface_data){
         if(!interface_exists($interface_name)) {
-            //TODO - log error
+            self::getLogger()->log_error("didn't find interface '{$interface_name}'");
             return false;
         }
 
         if (!isset($interface_data['RealizeAs'])) {
-            //TODO - log error
+            self::getLogger()->log_error("didn't find 'RealizeAs' configuration block for interface '{$interface_name}'");
             return false;
         }
 
         $className = $interface_data['RealizeAs'];
         if (!class_exists($className)) {
-            //TODO - log error
+            self::getLogger()->log_error("didn't find class {$className}, defined as implementation class for interface '{$interface_name}'");
             return false;
         }
 
         $reflrector = new ReflectionClass($className);
         if (!$reflrector->implementsInterface($interface_name)) {
-            //TODO - log error
+            self::getLogger()->log_error("Class {$className}, defined as implementation class for interface '{$interface_name}', does not implement it.");
             return false;
         }
 
@@ -55,7 +55,8 @@ class ComponentsManager {
     {
         $data = GetComponentsSettings();
         if (isset($data['default'])){
-            foreach ($data as $interface_name => $interface_data) {
+            $defaultData = $data['default'];
+            foreach ($defaultData as $interface_name => $interface_data) {
                 if(!$this->isInterfaceDataValid($interface_name, $interface_data)) {
                     continue;
                 }
