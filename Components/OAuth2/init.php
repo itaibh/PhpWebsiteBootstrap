@@ -25,7 +25,7 @@ class OAuth2 extends ComponentBase implements IOAuth2
         $this->registerProviders($init_data['Providers']);
     }
 
-    private registerProviders($providers_config) {
+    private function registerProviders($providers_config) {
         foreach ($providers_config as $className => $config) {
             self::getLogger()->log_info("loading oauth2 provider {$className}");
             include __DIR__ . "/Providers/{$className}.php";

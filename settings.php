@@ -18,8 +18,8 @@
                 'IAccountManager'=>[
                     'RealizeAs'=>'AccountManager'
                 ],
-                'IOAuthProvider'=>[
-                    'RealizeAs'=>'OAuthProvider',
+                'IOAuth2'=>[
+                    'RealizeAs'=>'OAuth2',
                     'Config'=>[
                         'Providers'=>[
                             'GoogleOAuthProvider'=>[
