@@ -1,0 +1,8 @@
+<h1><?= constant('website_title') ?></h1>
+<?php
+    if(isset($ex)) {
+        echo "<p>" . $ex->message ."</p>";
+    } else {
+        echo '<p>There was an error. See logs for more details.</p>';
+    }
+?>

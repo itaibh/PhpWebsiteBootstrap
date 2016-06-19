@@ -3,9 +3,13 @@
     include_once './components.php';
     require_once './Components/componentsmanager.php';
 
-    InitWebsite();
+    try {
+        InitWebsite();
 
-    ComponentsManager::Instance()->HandleRequest();
+        ComponentsManager::Instance()->HandleRequest();
+    } catch (Exception $ex) {
+        include 'error.php';
+        die;
+    }
+    include 'main.php';
 ?>
-<h1><?= constant('website_title') ?></h1>
-<a href="/login">Login</a>
