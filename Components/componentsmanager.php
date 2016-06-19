@@ -63,13 +63,15 @@ class ComponentsManager {
 
     public function Init()
     {
+        $settings = GetComponentsSettings();
+
         if (function_exists('GetComponentsSettings_Local')){
-            $data = GetComponentsSettings_Local();
-        } else {
-            $data = GetComponentsSettings();
+            $local_settings = GetComponentsSettings_Local();
+            $settings = array_replace_recursive($settings, $local_settings);
         }
-        if (isset($data['default'])){
-            $defaultData = $data['default'];
+        
+        if (isset($settings['default'])){
+            $defaultData = $settings['default'];
             foreach ($defaultData as $interface_name => $interface_data) {
                 if(!$this->isInterfaceDataValid($interface_name, $interface_data)) {
                     continue;
