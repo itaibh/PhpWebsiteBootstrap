@@ -60,6 +60,10 @@ class GoogleOAuthProvider implements IOAuthProvider
     {
         //echo $resp;
         $respJson = json_decode($resp);
+        if (isSet($respJson->error)){
+            //TODO - do something. there's also $respJson->error_description
+        }
+        //print_r($respJson);
         $idTokenParts = explode('.',$respJson->id_token);
         $idTokenParsed = base64_decode($idTokenParts[1]);
         //echo $idTokenParsed;

@@ -55,7 +55,7 @@ class OAuth2 extends ComponentBase implements IOAuth2
             return false;
         }
 
-        $lastPart = explode('?',$requestURI[2]);
+        $lastPart = explode('?',$requestURI[2])[0];
         $provider = $this->providers[$lastPart];
         $this->HandleRequest($provider);
 
