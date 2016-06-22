@@ -79,7 +79,7 @@ class OAuth2 extends ComponentBase implements IOAuth2
 
     private function findUserByOAuthToken($token, $provider)
     {
-        $oauthUserData = $this->db->FindFirst('OAuthUserData', array('token'=>$token, 'service'=>$provider));
+        $oauthUserData = $this->db->FindFirst('OAuthUserData', array('token'=>$token, 'service'=>$provider->GetName()));
         if ($oauthUserData){
             $user = $this->accountManager->GetUserById($oauthUserData->GetUserId());
             return $user;
