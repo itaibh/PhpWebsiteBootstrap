@@ -105,6 +105,12 @@ class AccountManager extends ComponentBase implements IAccountManager {
         return $role;
     }
 
+    public function GetUserById($id)
+    {
+        $user = $this->db->FindFirst('User', array('user_id'=>$id));
+        return $user;
+    }
+
     public function GetUserByEmail($email)
     {
         $user = $this->db->FindFirst('User', array('email'=>$email));

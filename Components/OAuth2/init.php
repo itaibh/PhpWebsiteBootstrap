@@ -55,8 +55,8 @@ class OAuth2 extends ComponentBase implements IOAuth2
             return false;
         }
 
-        $lastPart = explode('?',$requestURI[2])[0];
-        $provider = $this->providers[$lastPart];
+        $lastPart = explode('?',$requestURI[2])[1];
+        $provider = $this->providers[$lastPart]; // Warning: Illegal offset type
         $this->HandleRequest($provider);
 
         return true;
@@ -79,12 +79,9 @@ class OAuth2 extends ComponentBase implements IOAuth2
 
     private function findUserByOAuthToken($token, $provider)
     {
-        $db_prefix = $this->db->prefix;
-        $sql = "SELECT * FROM `{$db_prefix}oauth_user_tokens` WHERE token = :token & service = :service";
-        $row = $this->db->QuerySingleRow($sql, array(':token'=>$token, ':service'=>$provider->GetName()));
-        if ($row != null)
-        {
-            //$user = get user from $row;
+        $oauthUserData = $this->db->FindFirst('OAuthUserData', array('token'=>$token, 'service'=>$provider));
+        if ($oauthUserData){
+            $user = $this->accountManager->GetUserById($oauthUserData->GetUserId());
             return $user;
         }
         return null;
@@ -93,7 +90,6 @@ class OAuth2 extends ComponentBase implements IOAuth2
     private function updateOAuthTokenByEmail($email, $provider)
     {
         $user = $this->accountManager->GetUserByEmail($email);
-        $db_prefix = $this->db->prefix;
         if ($user === null)
         {
             $this->accountManager->CreateAccount(null, null, $email);
