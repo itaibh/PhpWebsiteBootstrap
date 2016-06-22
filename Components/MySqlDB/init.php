@@ -356,6 +356,10 @@ class MySqlDB extends ComponentBase implements IDatabase {
         $stmt->execute($params);
         $item = $stmt->fetchObject($typename);
 
+        if (!$item) {
+            $item = null;
+        }
+        
         return $item;
     }
 

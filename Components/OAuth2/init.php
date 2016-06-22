@@ -65,7 +65,7 @@ class OAuth2 extends ComponentBase implements IOAuth2
     private function HandleRequest($provider)
     {
         $oauthdata = $provider->GetOAuthDataFromRequest();
-        if ($oauthdata === null){
+        if ($oauthdata === null) {
             return null;
         }
         $token = $oauthdata->GetToken();
@@ -75,7 +75,7 @@ class OAuth2 extends ComponentBase implements IOAuth2
             $email = $oauthdata->GetEmail();
             if (isset($email) && $oauthdata->IsEmailVerified() === true)
             {
-                $user = $this->updateOAuthTokenByEmail($oauthdata->GetEmail(), $provider);
+                $user = $this->updateOAuthTokenByEmail($oauthdata->GetEmail(), $provider, $token);
             }
         }
     }
@@ -90,7 +90,7 @@ class OAuth2 extends ComponentBase implements IOAuth2
         return null;
     }
 
-    private function updateOAuthTokenByEmail($email, $provider)
+    private function updateOAuthTokenByEmail($email, $provider, $token)
     {
         $user = $this->accountManager->GetUserByEmail($email);
         if ($user === null)
