@@ -39,6 +39,7 @@ class AccountManager extends ComponentBase implements IAccountManager {
 
         $new_user = User::CreateWithPasswordData($username, $email, $password_hash, $salt);
         $this->db->InsertNewItem($new_user);
+        return $new_user;
     }
 
     private function validateAccountUniqueness($username, $email)
