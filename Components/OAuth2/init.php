@@ -93,6 +93,8 @@ class OAuth2 extends ComponentBase implements IOAuth2
     private function updateOAuthTokenByEmail($email, $provider)
     {
         $user = $this->accountManager->GetUserByEmail($email);
+echo "<h3>update oauth token</h3>";
+var_dump($user);
         if ($user === null)
         {
             $user = $this->accountManager->CreateAccount(null, null, $email);
