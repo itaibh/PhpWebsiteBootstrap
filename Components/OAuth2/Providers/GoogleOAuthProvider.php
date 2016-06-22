@@ -62,8 +62,10 @@ class GoogleOAuthProvider implements IOAuthProvider
         $respJson = json_decode($resp);
         if (isSet($respJson->error)){
             //TODO - do something. there's also $respJson->error_description
+            echo "<p>{$respJson->error_description}</p>";
+            return null;
         }
-        //print_r($respJson);
+        print_r($respJson);
         $idTokenParts = explode('.',$respJson->id_token);
         $idTokenParsed = base64_decode($idTokenParts[1]);
         //echo $idTokenParsed;
@@ -107,6 +109,9 @@ class GoogleOAuthProvider implements IOAuthProvider
     public function GetOAuthDataFromRequest()
     {
         $idTokenJson = $this->extractOAuthDataFromRequest();
+        if ($idTokenJson === null){
+            return null;
+        }
         return new OAuthData($idTokenJson->sub, $idTokenJson->email, $idTokenJson->email_verified);
     }
 
