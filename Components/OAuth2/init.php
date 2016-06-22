@@ -55,8 +55,8 @@ class OAuth2 extends ComponentBase implements IOAuth2
             return false;
         }
 
-        $lastPart = explode('?',$requestURI[2])[1];
-        $provider = $this->providers[$lastPart]; // Warning: Illegal offset type
+        $lastPart = $requestURI[2];
+        $provider = $this->providers[$lastPart];
         $this->HandleRequest($provider);
 
         return true;
