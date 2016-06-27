@@ -4,7 +4,7 @@ require_once __DIR__.'/../Logger/init.php';
 require_once __DIR__.'/ioauthprovider.php';
 require_once __DIR__.'/oauthuserdata.php';
 
-class OAuth2 extends ComponentBase implements IOAuth2
+class OAuth2 extends ControllerComponentBase implements IOAuth2
 {
     private $providers = array();
     private $db;
@@ -13,6 +13,10 @@ class OAuth2 extends ComponentBase implements IOAuth2
     protected function __construct() {}
     private function __clone() {}
     private function __wakeup() {}
+
+    public function GetRouteName() {
+        return "oauth";
+    }
 
     public function Init($init_data)
     {
@@ -44,25 +48,14 @@ class OAuth2 extends ComponentBase implements IOAuth2
         return $this->providers[$provider_name];
     }
 
-    public function TryHandleRequest()
+    public function HandleRequest($path, $query)
     {
-        $reqUri = $_SERVER['REQUEST_URI'];
-        $reqUriParts =  explode('?', $reqUri);
-        $requestURI = explode('/', $reqUriParts[0]);
-
-        if ($requestURI[1] != 'oauth')
-        {
-            return false;
-        }
-
-        $lastPart = $requestURI[2];
-        $provider = $this->providers[$lastPart];
-        $this->HandleRequest($provider);
-
-        return true;
+        $providerName = $path[2];
+        $provider = $this->providers[$providerName];
+        $this->doHandleRequest($provider);
     }
 
-    private function HandleRequest($provider)
+    private function doHandleRequest($provider)
     {
         $oauthdata = $provider->GetOAuthDataFromRequest();
         if ($oauthdata === null) {

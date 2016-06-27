@@ -11,6 +11,7 @@ class ComponentsManager {
 
     private $componentsPerCaller = array();
     private $defaultComponents = array();
+    private $routeHandlers = array();
 
     public static function Instance()
     {
@@ -61,6 +62,22 @@ class ComponentsManager {
         return true;
     }
 
+    private function initBySettingsBlock($settingsBlock){
+        foreach ($settingsBlock as $interface_name => $interface_data) {
+            if (!$this->isInterfaceDataValid($interface_name, $interface_data)) {
+                continue;
+            }
+
+            $component_name = $interface_data['RealizeAs'];
+            if (isset($interface_data['Config'])) {
+                $config = $interface_data['Config'];
+            } else {
+                $config = null;
+            }
+            $this->RegisterDefaultComponent($interface_name, $component_name, $config);
+        }
+    }
+
     public function Init()
     {
         $settings = GetComponentsSettings();
@@ -69,23 +86,11 @@ class ComponentsManager {
             $local_settings = GetComponentsSettings_Local();
             $settings = array_replace_recursive($settings, $local_settings);
         }
-        
-        if (isset($settings['default'])){
-            $defaultData = $settings['default'];
-            foreach ($defaultData as $interface_name => $interface_data) {
-                if(!$this->isInterfaceDataValid($interface_name, $interface_data)) {
-                    continue;
-                }
 
-                $component_name = $interface_data['RealizeAs'];
-                if (isset($interface_data['Config'])) {
-                    $config = $interface_data['Config'];
-                } else {
-                    $config = null;
-                }
-                $this->RegisterDefaultComponent($interface_name, $component_name, $config);
-            }
+        if (isset($settings['default'])){
+            $this->initBySettingsBlock($settings['default']);
         }
+
         foreach ($this->defaultComponents as $name => $container) {
             $container->TryInit();
         }
@@ -105,7 +110,12 @@ class ComponentsManager {
 
         $component = call_user_func($component_name. '::Instance');
 
-        $this->defaultComponents[$component_interface] = new ComponentContainer($component, $init_data);
+        $container = new ComponentContainer($component, $init_data);
+        $this->defaultComponents[$component_interface] = $container;
+
+        if ($component instanceof IControllerComponent) {
+            $this->routeHandlers[$component->GetRouteName()] = $container;
+        }
     }
 
     public function GetComponent($component_name)
@@ -115,15 +125,32 @@ class ComponentsManager {
         return $container->component;
     }
 
+    private function getRequestQueryItems($queryString){
+        $query = array();
+        $queryParts = explode('&', $queryString);
+        foreach ($queryParts as $queryItem) {
+            $queryItemParts = explode('=',$queryItem);
+            if (isset($queryItemParts[1])){
+                $query[$queryItemParts[0]] = $queryItemParts[1];
+            } else {
+                $query[] = $queryItemParts[0];
+            }
+        }
+        return $query;
+    }
+
     public function HandleRequest()
     {
-        foreach ($this->defaultComponents as $name => $container)
-        {
-            $container->TryInit();
-            if ($container->component->TryHandleRequest())
-            {
-                break;
-            }
+        $reqUri = $_SERVER['REQUEST_URI'];
+        $reqUriParts = explode('?', $reqUri);
+        if (isset($reqUriParts[1])) {
+            $query = $this->getRequestQueryItems($reqUriParts[1]);
+        } else {
+            $query = array();
+        }
+        $requestURI = explode('/', $reqUriParts[0]);
+        if (isset($this->routeHandlers[$requestURI[1]])) {
+            $this->routeHandlers[$requestURI[1]]->component->HandleRequest($requestURI, $query);
         }
     }
 }

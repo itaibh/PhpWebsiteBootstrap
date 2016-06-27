@@ -3,13 +3,17 @@ require_once __DIR__.'/../componentsmanager.php';
 require_once __DIR__.'/user.php';
 require_once __DIR__.'/role.php';
 
-class AccountManager extends ComponentBase implements IAccountManager {
+class AccountManager extends ControllerComponentBase implements IAccountManager {
 
     private $db;
 
     protected function __construct() {}
     private function __clone() {}
     private function __wakeup() {}
+
+    public function GetRouteName() {
+        return "account";
+    }
 
     public function Init($init_data)
     {
@@ -171,37 +175,11 @@ class AccountManager extends ComponentBase implements IAccountManager {
         return ($secondsDiff < 15*60);
     }
 
-    public function TryHandleRequest()
-    {
-        $reqUri = $_SERVER['REQUEST_URI'];
-        $reqUriParts =  explode('?', $reqUri);
-        $requestURI = explode('/', $reqUriParts[0]);
-
-        self::getLogger()->log_info("TryHandleRequest - " . var_export($requestURI, true));
-
-        $action = $requestURI[1];
-        if ($action != 'login' && $action != 'register')
-        {
-            return false;
-        }
-        $method = $_SERVER['REQUEST_METHOD'];
-
-        $function_name = "{$action}_{$method}";
-
-        if(method_exists($this, $function_name))
-        {
-            $this->$function_name();
-            return true;
-        }
-
-        return false;
-    }
-
-    private function login_GET(){
+    public function login_GET(){
         include (__DIR__.'/../LoginWidget/login.php');
     }
 
-    private function login_POST(){
+    public function login_POST(){
         //echo '<pre>' . var_export($_POST, true) . '</pre>';
         $user = $this->ValidateAccount($_POST['username'], $_POST['password']);
         $isAccountValid = ($user !== null) ? 'true' : 'false';
@@ -209,7 +187,7 @@ class AccountManager extends ComponentBase implements IAccountManager {
         die();
     }
 
-    private function register_POST(){
+    public function register_POST(){
         //echo '<pre>' . var_export($_POST, true) . '</pre>';
         $user = $this->CreateAccount($_POST['username'], $_POST['password'], $_POST['email']);
         $isAccountValid = ($user !== null) ? 'true' : 'false';
