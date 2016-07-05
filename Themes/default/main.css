@@ -1,0 +1,10 @@
+html {
+
+}
+
+footer {
+    position: absolute;
+    bottom: 1;
+    background: #555;
+    color: #fff;
+}

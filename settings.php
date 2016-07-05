@@ -33,6 +33,13 @@
                             ]
                         ]
                     ]
+                ],
+                'IPageRenderer'=>[
+                    'RealizeAs'=>'PageRenderer',
+                    'Config'=>[
+                        'theme'=>'default',
+                        'default_template'=>'main.php'
+                    ]
                 ]
             ]
         ];

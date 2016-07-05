@@ -143,15 +143,18 @@ class ComponentsManager {
     {
         $reqUri = $_SERVER['REQUEST_URI'];
         $reqUriParts = explode('?', $reqUri);
+        self::getLogger()->log_info("componentmanager - handle request. uri: $reqUri");
         if (isset($reqUriParts[1])) {
             $query = $this->getRequestQueryItems($reqUriParts[1]);
         } else {
             $query = array();
         }
         $requestURI = explode('/', $reqUriParts[0]);
-        if (isset($this->routeHandlers[$requestURI[1]])) {
-            $this->routeHandlers[$requestURI[1]]->component->HandleRequest($requestURI, $query);
+        $handlerKey = $requestURI[1];
+        if (!isset($this->routeHandlers[$handlerKey])) {
+            $handlerKey = null;
         }
+        $this->routeHandlers[$handlerKey]->component->HandleRequest($requestURI, $query);
     }
 }
 

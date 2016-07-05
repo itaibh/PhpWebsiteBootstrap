@@ -122,6 +122,15 @@ class AccountManager extends ControllerComponentBase implements IAccountManager 
         return $user;
     }
 
+    public function GetCurrentUser()
+    {
+        if (isset($_SESSION['user']))
+        {
+            return $_SESSION['user'];
+        }
+        return null;
+    }
+
     private function validateUserExistance($username)
     {
         $user = $this->db->FindFirst('User', array('username'=>$username));
@@ -175,8 +184,9 @@ class AccountManager extends ControllerComponentBase implements IAccountManager 
         return ($secondsDiff < 15*60);
     }
 
-    public function login_GET(){
-        include (__DIR__.'/../LoginWidget/login.php');
+    /*
+    public function login_GET() {
+        $this->View('login');
     }
 
     public function login_POST(){
@@ -184,6 +194,7 @@ class AccountManager extends ControllerComponentBase implements IAccountManager 
         $user = $this->ValidateAccount($_POST['username'], $_POST['password']);
         $isAccountValid = ($user !== null) ? 'true' : 'false';
         echo "valid account: $isAccountValid<br>";
+        $_SESSION['user'] = $user;
         die();
     }
 
@@ -194,6 +205,7 @@ class AccountManager extends ControllerComponentBase implements IAccountManager 
         echo "valid account: $isAccountValid<br>";
         die();
     }
+    */
 }
 
  ?>

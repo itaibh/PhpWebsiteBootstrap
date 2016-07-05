@@ -35,17 +35,20 @@ abstract class ControllerComponentBase extends ComponentBase implements IControl
     public abstract function GetRouteName();
     public function HandleRequest($path, $query) {
         $action = $path[2];
-        if (method_exists($this, $action)) {
-            $this->$action();
-            return;
-        }
-
         $method = $_SERVER['REQUEST_METHOD'];
+
         $function_name = "{$action}_{$method}";
         if (method_exists($this, $function_name)) {
             $this->$function_name();
-            return;
+            return true;
+        } else if (method_exists($this, $action)) {
+            $this->$action();
+            return true;
         }
+        return false;
+    }
+    protected function View($view_name) {
+        include(ROOTPATH."/Views/$view_name.php");
     }
 }
 

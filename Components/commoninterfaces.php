@@ -16,6 +16,7 @@ interface IAccountManager {
     //public function RemoveUserRole($username, $role);
     public function GetUserById($id);
     public function GetUserByEmail($email);
+    public function GetCurrentUser();
     public function ValidateAccount($username, $password);
     public function GenerateToken($username, $purpose);
     public function ValidateToken($username, $purpose, $token);
@@ -27,4 +28,8 @@ interface IOAuth2
     public function GetProvider($provider_name);
 }
 
+interface IPageRenderer
+{
+
+}
 ?>
