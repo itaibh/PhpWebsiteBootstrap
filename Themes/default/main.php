@@ -5,7 +5,8 @@
 <html>
 <head>
     <title><?= constant('website_title') ?></title>
-    <link rel="stylesheet" href="CurrentTheme/main.css" />
+    <link rel="stylesheet" href="/CurrentTheme/main.css" />
+    <?php $this->Render('ExtraHeadElements'); ?>
 </head>
 <body>
     <?php
@@ -18,6 +19,7 @@
         else {
             include __DIR__.'/nouserheader.php';
         }
+        $this->Render('MainContent');
         include __DIR__.'/footer.php'
     ?>
 </body>

@@ -5,6 +5,10 @@ class Logger{
     }
 
     private $m_prefix;
+    public function log_debug($message){
+        //error_log('[DEBUG] ' . $this->m_prefix. ' - ' . $message);
+    }
+
     public function log_info($message){
         error_log('[INFO] ' . $this->m_prefix. ' - ' . $message);
     }

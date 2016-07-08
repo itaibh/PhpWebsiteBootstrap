@@ -7,12 +7,14 @@
 
         private $template_file;
         private $theme;
+        private $theme_path;
 
         public function Init($init_data)
         {
             self::getLogger()->log_info("initializing page renderer");
             $this->template_file = $init_data['default_template'];
             $this->theme = $init_data['theme'];
+            $this->theme_path = ROOTPATH . '/Themes/' . $this->theme . '/';
 
             $this->generateUpToDateMimeArray(APACHE_MIME_TYPES_URL);
         }
@@ -36,21 +38,57 @@
             return "application/octet-stream";
         }
 
+        private $current_path;
+        private $current_query;
+
         public function HandleRequest($path, $query)
         {
-            $themePath = ROOTPATH . '/Themes/' . $this->theme . '/';
             if ($path[1] == 'CurrentTheme') {
                 $filename = implode('/', array_slice($path,2));
                 $mimetype = $this->GetMimeFromExtension(pathinfo($filename, PATHINFO_EXTENSION));
                 header('Content-type: '.$mimetype);
-                include $themePath . $filename;
+                include $this->theme_path . $filename;
             } else {
-                $filepath = $themePath . 'page-' . end($path) . '.php';
+                $filepath = $this->theme_path . 'page-' . $path[1] . '.php';
                 if (file_exists($filepath)) {
                     include $filepath;
                 } else {
-                    include $themePath . $this->template_file;
+                    $this->current_path = $path;
+                    $this->current_query = $query;
+
+                    $page = $this->current_path[1];
+                    $filepath = $this->theme_path . $page . '.php';
+                    if (file_exists($filepath)) {
+                        include $filepath;
+                    }
+
+                    include $this->theme_path . $this->template_file;
                 }
+            }
+        }
+
+        private function DefineSection($buffer){
+            $name = array_pop($this->section_names);
+            $this->section_data[$name] = $buffer;
+        }
+
+        private $section_names = array();
+        private $section_data = array();
+
+        private function StartSection($name)
+        {
+            $this->section_names[] = $name;
+            ob_start(array($this, 'DefineSection'));
+        }
+
+        private function EndSection(){
+            ob_end_flush();
+        }
+
+        private function Render($section)
+        {
+            if (isset($this->section_data[$section])){
+                echo $this->section_data[$section];
             }
         }
 

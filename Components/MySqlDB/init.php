@@ -113,7 +113,7 @@ class MySqlDB extends ComponentBase implements IDatabase {
     }
 
     private function convertDefault($default_value){
-        self::getLogger()->log_info("convertDefault - value: $default_value");
+        self::getLogger()->log_debug("convertDefault - value: $default_value");
         if ($default_value == 'NOW') {
             return 'DEFAULT CURRENT_TIMESTAMP';
         }
@@ -188,7 +188,7 @@ class MySqlDB extends ComponentBase implements IDatabase {
 
         $sql .= ') ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1';
 
-        self::getLogger()->log_info("createRelationTable - sql: \n$sql");
+        self::getLogger()->log_debug("createRelationTable - sql: \n$sql");
         $stmt = $this->dbh->exec($sql);
 
         return true;
@@ -359,7 +359,7 @@ class MySqlDB extends ComponentBase implements IDatabase {
         if (!$item) {
             $item = null;
         }
-        
+
         return $item;
     }
 
