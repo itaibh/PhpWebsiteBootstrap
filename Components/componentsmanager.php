@@ -18,7 +18,7 @@ class ComponentsManager {
         static $instance = null;
         if ($instance === null)
         {
-            self::getLogger()->log_info("creating components manager");
+            self::getLogger()->log_debug("creating components manager");
             $instance = new static();
         }
         return $instance;
@@ -45,7 +45,7 @@ class ComponentsManager {
 
         $component_name = $interface_data['RealizeAs'];
         if (!class_exists($component_name)) {
-            self::getLogger()->log_info("loading component {$component_name}");
+            self::getLogger()->log_debug("loading component {$component_name}");
             include __DIR__ . "/{$component_name}/init.php";
             if (!class_exists($component_name)) {
                 self::getLogger()->log_error("didn't find class {$component_name}, defined as implementation class for interface '{$interface_name}'");
@@ -143,7 +143,7 @@ class ComponentsManager {
     {
         $reqUri = $_SERVER['REQUEST_URI'];
         $reqUriParts = explode('?', $reqUri);
-        self::getLogger()->log_info("componentmanager - handle request. uri: $reqUri");
+        self::getLogger()->log_info("HandleRequest. uri: $reqUri");
         if (isset($reqUriParts[1])) {
             $query = $this->getRequestQueryItems($reqUriParts[1]);
         } else {
