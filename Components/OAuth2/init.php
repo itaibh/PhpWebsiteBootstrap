@@ -23,7 +23,7 @@ class OAuth2 extends ControllerComponentBase implements IOAuth2
         $this->db = ComponentsManager::Instance()->GetComponent('IDatabase');
         $this->accountManager = ComponentsManager::Instance()->GetComponent('IAccountManager');
 
-        self::getLogger()->log_info("creating oauth-users tokens table");
+        self::getLogger()->log_debug("creating oauth-users tokens table");
         $this->db->CreateTable('OAuthUserData');
 
         $this->registerProviders($init_data['Providers']);

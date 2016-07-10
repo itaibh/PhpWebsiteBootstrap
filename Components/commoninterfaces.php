@@ -30,6 +30,11 @@ interface IOAuth2
 
 interface IPageRenderer
 {
+}
+
+interface IGallery
+{
+}
 
 }
 ?>

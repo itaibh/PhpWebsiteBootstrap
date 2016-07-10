@@ -1,0 +1,15 @@
+#gallery-container {
+    width: 100%;
+    min-width: 200px;
+    min-height: 200px;
+}
+
+#gallery {
+    background: #ddd;
+    border: 1px solid;
+    padding: 10px;
+}
+
+#gallery > img {
+    max-width: 100%;
+}

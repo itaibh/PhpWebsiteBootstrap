@@ -19,10 +19,10 @@ class AccountManager extends ControllerComponentBase implements IAccountManager 
     {
         $this->db = ComponentsManager::Instance()->GetComponent('IDatabase');
 
-        self::getLogger()->log_info("creating roles table");
+        self::getLogger()->log_debug("creating roles table");
         $this->db->CreateTable('Role');
 
-        self::getLogger()->log_info("creating users table");
+        self::getLogger()->log_debug("creating users table");
         $this->db->CreateTable('User');
     }
 

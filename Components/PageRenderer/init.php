@@ -56,7 +56,7 @@
                     $this->current_path = $path;
                     $this->current_query = $query;
 
-                    $page = $this->current_path[1];
+                    $page = $path[1];
                     $filepath = $this->theme_path . $page . '.php';
                     if (file_exists($filepath)) {
                         include $filepath;
@@ -67,28 +67,58 @@
             }
         }
 
-        private function DefineSection($buffer){
-            $name = array_pop($this->section_names);
-            $this->section_data[$name] = $buffer;
-        }
-
         private $section_names = array();
         private $section_data = array();
 
         private function StartSection($name)
         {
             $this->section_names[] = $name;
-            ob_start(array($this, 'DefineSection'));
+            ob_start(function ($buffer){
+                $name = array_pop($this->section_names);
+                $this->section_data[$name] = $buffer;
+            });
         }
 
         private function EndSection(){
             ob_end_flush();
         }
 
-        private function Render($section)
+        private function RenderSection($section)
         {
             if (isset($this->section_data[$section])){
                 echo $this->section_data[$section];
+            }
+        }
+
+        private function RenderPart($part)
+        {
+            include(ROOTPATH."/Views/Parts/{$part}.php");
+            /*if (isset($this->part_data[$part])){
+                echo $this->part_data[$part];
+            }*/
+        }
+
+        private $required_scripts = array();
+
+        private function RequireScript($scriptname){
+            $this->required_scripts[$scriptname] = null;
+        }
+
+        private function RenderRequiredScripts(){
+            foreach ($this->required_scripts as $key => $value) {
+                echo "<script src=\"$key\"></script>";
+            }
+        }
+
+        private $required_styles = array();
+
+        private function RequireStyle($styletname){
+            $this->required_styles[$styletname] = null;
+        }
+
+        private function RenderRequiredStyles(){
+            foreach ($this->required_styles as $key => $value) {
+                echo "<link rel=\"stylesheet\" href=\"$key\" />";
             }
         }
 

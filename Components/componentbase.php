@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/actionresult.php';
+
 interface IComponent {
     public function Init($init_data);
 }
@@ -37,16 +39,25 @@ abstract class ControllerComponentBase extends ComponentBase implements IControl
         $action = $path[2];
         $method = $_SERVER['REQUEST_METHOD'];
 
-        $function_name = "{$action}_{$method}";
-        if (method_exists($this, $function_name)) {
-            $this->$function_name();
-            return true;
-        } else if (method_exists($this, $action)) {
-            $this->$action();
-            return true;
+        $function_name = "{$method}_{$action}";
+
+        if (!method_exists($this, $function_name)) {
+            $function_name = $action;
         }
-        return false;
+
+        if (!method_exists($this, $function_name)) {
+            return false;
+        }
+
+        $return_value = $this->$function_name($path, $query);
+        if (isset($return_value)) {
+            if ($return_value instanceof ActionResult) {
+                $return_value->Output();
+            }
+        }
+        return true;
     }
+
     protected function View($view_name) {
         include(ROOTPATH."/Views/$view_name.php");
     }
